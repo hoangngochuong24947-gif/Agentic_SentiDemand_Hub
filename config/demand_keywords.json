@@ -1,0 +1,63 @@
+{
+  "categories": {
+    "taste": {
+      "name": "口味",
+      "name_en": "Taste",
+      "keywords": [
+        "味道", "口味", "口感", "好吃", "美味", "香甜", "咸淡", "酸甜苦辣",
+        "味道好", "味道不错", "很好吃", "美味可口", "香甜可口", "味道鲜美",
+        "taste", "flavor", "delicious", "tasty", "yummy"
+      ]
+    },
+    "price": {
+      "name": "价格",
+      "name_en": "Price",
+      "keywords": [
+        "价格", "价钱", "贵", "便宜", "实惠", "划算", "性价比", "物有所值",
+        "价格合适", "价格合理", "价格便宜", "价格实惠", "价格公道",
+        "price", "cost", "expensive", "cheap", "affordable", "value"
+      ]
+    },
+    "quality": {
+      "name": "质量",
+      "name_en": "Quality",
+      "keywords": [
+        "质量", "品质", "做工", "材料", "材质", "用料", "结实", "耐用",
+        "质量很好", "质量不错", "质量一般", "质量差", "做工精细",
+        "quality", "material", "durable", "well-made", "craftsmanship"
+      ]
+    },
+    "packaging": {
+      "name": "包装",
+      "name_en": "Packaging",
+      "keywords": [
+        "包装", "外观", "盒子", "袋子", "箱子", "精美", "完整", "破损",
+        "包装很好", "包装精美", "包装严实", "包装完整", "包装破损",
+        "packaging", "package", "box", "bag", "wrapper", "well-packed"
+      ]
+    },
+    "logistics": {
+      "name": "物流",
+      "name_en": "Logistics",
+      "keywords": [
+        "物流", "快递", "发货", "送货", "配送", "运输", "速度", "时效",
+        "物流很快", "快递很快", "发货快", "送货快", "配送及时",
+        "logistics", "shipping", "delivery", "express", "fast shipping"
+      ]
+    },
+    "service": {
+      "name": "服务",
+      "name_en": "Service",
+      "keywords": [
+        "服务", "客服", "售后", "态度", "热情", "周到", "耐心", "专业",
+        "服务好", "客服好", "态度好", "服务周到", "耐心解答",
+        "service", "customer service", "support", "helpful", "friendly"
+      ]
+    }
+  },
+  "settings": {
+    "case_sensitive": false,
+    "match_whole_word": false,
+    "include_synonyms": true
+  }
+}

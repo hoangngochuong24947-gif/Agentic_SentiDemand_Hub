@@ -1,0 +1,79 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "comment-analyzer"
+version = "0.1.0"
+description = "A generic, reusable NLP analysis toolkit for e-commerce comments and reviews"
+readme = "README.md"
+license = {text = "MIT"}
+authors = [
+    {name = "Comment Analyzer Team", email = "team@comment-analyzer.dev"}
+]
+keywords = ["nlp", "sentiment-analysis", "topic-modeling", "e-commerce", "reviews", "lda", "tf-idf"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Text Processing :: Linguistic",
+]
+requires-python = ">=3.8"
+dependencies = [
+    "pandas>=1.3.0",
+    "numpy>=1.21.0",
+    "scikit-learn>=1.0.0",
+    "jieba>=0.42.1",
+    "snownlp>=0.12.3",
+    "gensim>=4.0.0",
+    "pyyaml>=6.0",
+    "tqdm>=4.62.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "black>=22.0.0",
+    "flake8>=5.0.0",
+    "mypy>=1.0.0",
+    "sphinx>=5.0.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/yourusername/comment-analyzer"
+Documentation = "https://comment-analyzer.readthedocs.io"
+Repository = "https://github.com/yourusername/comment-analyzer"
+Issues = "https://github.com/yourusername/comment-analyzer/issues"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+comment_analyzer = ["../config/*.txt", "../config/*.json", "../config/*.yaml"]
+
+[tool.black]
+line-length = 100
+target-version = ['py38', 'py39', 'py310', 'py311']
+
+[tool.mypy]
+python_version = "3.8"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "--cov=src/comment_analyzer --cov-report=term-missing --cov-report=html"

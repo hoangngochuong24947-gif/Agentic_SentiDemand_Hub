@@ -1,0 +1,122 @@
+# Comment Analyzer Default Configuration
+
+# Data settings
+data:
+  # Supported platforms: jd, taobao, tmall, b站, generic
+  platform: generic
+  # Text column auto-detection keywords (case-insensitive)
+  text_column_keywords:
+    - content
+    - comment
+    - review
+    - text
+    - 评论
+    - 内容
+    - 评价
+  # Rating column auto-detection keywords
+  rating_column_keywords:
+    - rating
+    - score
+    - star
+    - 评分
+    - 星级
+  # Date column auto-detection keywords
+  date_column_keywords:
+    - date
+    - time
+    - created
+    - 时间
+    - 日期
+
+# Preprocessing settings
+preprocessing:
+  # Text cleaning
+  clean:
+    remove_urls: true
+    remove_emails: true
+    remove_html: true
+    remove_extra_spaces: true
+    normalize_whitespace: true
+
+  # Segmentation (jieba)
+  segmentation:
+    mode: precise  # precise, full, search
+    custom_dict_path: null  # Path to custom dictionary file
+
+  # Stopwords
+  stopwords:
+    use_default: true
+    custom_path: null  # Path to custom stopwords file
+    extra_words: []  # Additional words to filter
+
+# Sentiment Analysis settings
+sentiment:
+  # Labeling method: snownlp, rating, or manual
+  labeling_method: snownlp
+
+  # SnowNLP settings
+  snownlp:
+    threshold_positive: 0.6
+    threshold_negative: 0.4
+
+  # Sample balancing
+  balance:
+    enabled: true
+    method: undersample  # undersample, oversample, smote
+    random_state: 42
+
+  # TF-IDF Vectorization
+  tfidf:
+    max_features: 5000
+    min_df: 2
+    max_df: 0.95
+    ngram_range: [1, 2]
+
+  # Classification models
+  models:
+    naive_bayes:
+      enabled: true
+      alpha: 1.0
+    svm:
+      enabled: true
+      kernel: linear
+      C: 1.0
+    logistic_regression:
+      enabled: true
+      C: 1.0
+      max_iter: 1000
+
+# Topic Modeling settings
+topic:
+  # Keyword extraction
+  keywords:
+    method: tfidf  # tfidf, textrank
+    top_k: 20
+
+  # LDA settings
+  lda:
+    num_topics: 5
+    passes: 15
+    iterations: 100
+    alpha: auto
+    eta: auto
+    random_state: 42
+
+# Demand Analysis settings
+demand:
+  # Intensity calculation
+  intensity:
+    method: tfidf_weighted  # simple, tfidf_weighted
+    normalization: minmax
+
+  # Correlation analysis
+  correlation:
+    method: cooccurrence  # cooccurrence, pmi
+    min_cooccurrence: 2
+    window_size: 50
+
+# Output settings
+output:
+  save_intermediate: false
+  encoding: utf-8
+  float_format: "%.4f"
