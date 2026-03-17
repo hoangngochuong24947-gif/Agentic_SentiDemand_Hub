@@ -7,21 +7,86 @@ This package provides tools for:
 - Topic modeling (TF-IDF and LDA)
 - Demand insights (intensity and correlation analysis)
 
+New in v0.2.0:
+- Pydantic-based type-safe configuration
+- Structured logging with Loguru
+- Automatic sequence numbering for outputs
+- Categorized output folders
+
 Example:
-    >>> from comment_analyzer import CommentPipeline, Config
-    >>> config = Config.from_yaml("config.yaml")
-    >>> pipeline = CommentPipeline(config)
-    >>> results = pipeline.run(data)
+    >>> from comment_analyzer import CommentPipeline, Settings
+    >>> from comment_analyzer.core.log_manager import init_logging
+    >>>
+    >>> # Initialize logging
+    >>> init_logging()
+    >>>
+    >>> # Load settings
+    >>> settings = Settings()
+    >>>
+    >>> # Create pipeline with settings
+    >>> pipeline = CommentPipeline(settings=settings)
+    >>>
+    >>> # Load and analyze data
+    >>> df = pipeline.load_data("comments.csv")
+    >>> results = pipeline.run(df)
+    >>>
+    >>> # Save results to categorized folders
+    >>> results.save()
+    >>>
+    >>> # Access output manager for custom saves
+    >>> from comment_analyzer.core.output_manager import OutputManager
+    >>> manager = OutputManager()
+    >>> manager.save_dataframe(df, "custom.csv", category="demand")
 """
 
 from comment_analyzer.core.config import Config
 from comment_analyzer.core.pipeline import CommentPipeline, PipelineResults
 
-__version__ = "0.1.0"
+# New Pydantic-based settings
+from comment_analyzer.core.settings import (
+    Settings,
+    PathConfig,
+    DataConfig,
+    PreprocessingConfig,
+    SentimentConfig,
+    TopicConfig,
+    DemandConfig,
+    OutputConfig,
+    LoggingConfig,
+    VisualizationConfig,
+    get_settings,
+    init_settings,
+)
+
+# Managers
+from comment_analyzer.core.output_manager import OutputManager, SavedFileInfo
+from comment_analyzer.core.log_manager import LogManager, get_log_manager, init_logging
+
+__version__ = "0.2.0"
 __author__ = "Comment Analyzer Team"
 
 __all__ = [
+    # Legacy
     "Config",
     "CommentPipeline",
     "PipelineResults",
+    # New Settings
+    "Settings",
+    "PathConfig",
+    "DataConfig",
+    "PreprocessingConfig",
+    "SentimentConfig",
+    "TopicConfig",
+    "DemandConfig",
+    "OutputConfig",
+    "LoggingConfig",
+    "VisualizationConfig",
+    "get_settings",
+    "init_settings",
+    # Managers
+    "OutputManager",
+    "SavedFileInfo",
+    "LogManager",
+    "get_log_manager",
+    "init_logging",
 ]

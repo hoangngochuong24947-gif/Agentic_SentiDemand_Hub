@@ -120,3 +120,31 @@ output:
   save_intermediate: false
   encoding: utf-8
   float_format: "%.4f"
+
+# Filesystem path settings
+paths:
+  output_base: "./outputs"
+  visualization_base: "~/.sentidemand/outputs"
+  upload_dir: "~/.sentidemand/uploads"
+
+# Visualization settings
+visualization:
+  theme: dark
+  locale: zh-CN
+  auto_open_browser: true
+  gallery_port: 8765
+  charts:
+    sentiment_donut: true
+    sentiment_wordcloud: true
+    sentiment_distribution: true
+    sentiment_scatter: true
+    features_bidirectional: true
+    features_lollipop: true
+    features_heatmap: true
+    features_tfidf_scatter: true
+    topics_nightingale: true
+    topics_bubble: true
+    topics_radar: true
+    demand_funnel: true
+    demand_network: true
+    demand_dashboard: true

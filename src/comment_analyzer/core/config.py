@@ -2,12 +2,28 @@
 
 This module provides a flexible configuration system using YAML files
 with support for programmatic overrides.
+
+Note: This module is maintained for backward compatibility.
+New code should use the Settings class from settings.py which provides
+type-safe Pydantic-based configuration.
 """
 
+from __future__ import annotations
+
 import os
-import yaml
+import warnings
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
+
+import yaml
+
+# Import new settings system for migration path
+from comment_analyzer.core.settings import (
+    Settings,
+    PathConfig,
+    get_settings,
+    init_settings,
+)
 
 
 class Config:
@@ -16,13 +32,17 @@ class Config:
     Provides a hierarchical configuration system with defaults,
     file-based configuration, and programmatic overrides.
 
+    Note: This class is maintained for backward compatibility.
+    For new code, use Settings from comment_analyzer.core.settings.
+
     Attributes:
-        data (Dict[str, Any]): Data loading configuration
-        preprocessing (Dict[str, Any]): Preprocessing settings
-        sentiment (Dict[str, Any]): Sentiment analysis settings
-        topic (Dict[str, Any]): Topic modeling settings
-        demand (Dict[str, Any]): Demand analysis settings
-        output (Dict[str, Any]): Output settings
+        data (ConfigSection): Data loading configuration
+        preprocessing (ConfigSection): Preprocessing settings
+        sentiment (ConfigSection): Sentiment analysis settings
+        topic (ConfigSection): Topic modeling settings
+        demand (ConfigSection): Demand analysis settings
+        output (ConfigSection): Output settings
+        paths (PathConfig): Path configuration (new in v0.2.0)
 
     Example:
         >>> # Load from YAML file
@@ -34,6 +54,9 @@ class Config:
         >>>
         >>> # Access nested values
         >>> max_features = config.get("sentiment.tfidf.max_features")
+        >>>
+        >>> # Get the new Settings object (migration path)
+        >>> settings = config.to_settings()
     """
 
     DEFAULT_CONFIG_PATH = Path(__file__).parent.parent.parent.parent / "config" / "default.yaml"
@@ -49,6 +72,9 @@ class Config:
             self._config = self._load_default_config()
         else:
             self._config = config_dict
+
+        # Initialize new path config
+        self.paths = PathConfig(**self._config.get("paths", {}))
 
         # Set up attribute accessors for common sections
         self._setup_accessors()
@@ -139,6 +165,35 @@ class Config:
                 "save_intermediate": False,
                 "encoding": "utf-8",
                 "float_format": "%.4f",
+                "use_sequence_numbers": True,
+                "sequence_padding": 3,
+            },
+            "paths": {
+                "output_base": "./outputs",
+                "visualization_base": "~/.sentidemand/outputs",
+                "upload_dir": "~/.sentidemand/uploads",
+            },
+            "visualization": {
+                "theme": "dark",
+                "locale": "zh-CN",
+                "auto_open_browser": True,
+                "gallery_port": 8765,
+                "charts": {
+                    "sentiment_donut": True,
+                    "sentiment_wordcloud": True,
+                    "sentiment_distribution": True,
+                    "sentiment_scatter": True,
+                    "features_bidirectional": True,
+                    "features_lollipop": True,
+                    "features_heatmap": True,
+                    "features_tfidf_scatter": True,
+                    "topics_nightingale": True,
+                    "topics_bubble": True,
+                    "topics_radar": True,
+                    "demand_funnel": True,
+                    "demand_network": True,
+                    "demand_dashboard": True,
+                },
             },
         }
 
@@ -151,6 +206,7 @@ class Config:
         self.topic = ConfigSection(self._config.get("topic", {}))
         self.demand = ConfigSection(self._config.get("demand", {}))
         self.output = ConfigSection(self._config.get("output", {}))
+        self.visualization = ConfigSection(self._config.get("visualization", {}))
 
     @classmethod
     def from_yaml(cls, path: Union[str, Path]) -> "Config":
@@ -227,7 +283,7 @@ class Config:
         if custom_path:
             return Path(custom_path)
         if self.preprocessing.stopwords.use_default:
-            return Path(__file__).parent.parent.parent.parent / "config" / "stopwords.txt"
+            return self.paths.config_dir / "stopwords.txt"
         return None
 
     def get_demand_keywords_path(self) -> Path:
@@ -236,7 +292,24 @@ class Config:
         Returns:
             Path to demand_keywords.json file.
         """
-        return Path(__file__).parent.parent.parent.parent / "config" / "demand_keywords.json"
+        return self.paths.config_dir / "demand_keywords.json"
+
+    def to_settings(self) -> Settings:
+        """Convert this Config to the new Settings object.
+
+        This is a migration path for transitioning from Config to Settings.
+
+        Returns:
+            Settings instance with equivalent configuration.
+        """
+        warnings.warn(
+            "Config.to_settings() is deprecated. Use Settings directly.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+
+        # Convert the internal dict to a Settings object
+        return Settings(**self._config)
 
     def __repr__(self) -> str:
         return f"Config(platform={self.data.platform})"

@@ -1,0 +1,83 @@
+2026-03-16 21:54:09 | INFO     | comment_analyzer.core.log_manager:configure:91 - Logging configured at level: INFO
+2026-03-16 21:54:09 | INFO     | comment_analyzer.core.pipeline:__init__:440 - CommentPipeline initialized (platform: generic)
+2026-03-16 21:54:09 | INFO     | comment_analyzer.core.log_manager:log_pipeline_start:198 - ============================================================
+Pipeline started
+2026-03-16 21:54:09 | INFO     | comment_analyzer.core.pipeline:run:652 - Using text column: 'comment'
+2026-03-16 21:54:09 | INFO     | comment_analyzer.core.pipeline:run:653 - Processing 100 comments...
+2026-03-16 21:54:10 | INFO     | comment_analyzer.core.log_manager:log_important:151 - [IMPORTANT] [ml] Successfully trained naive_bayes
+2026-03-16 21:54:10 | INFO     | comment_analyzer.core.log_manager:log_important:151 - [IMPORTANT] [ml] Successfully trained svm
+2026-03-16 21:54:10 | INFO     | comment_analyzer.core.log_manager:log_important:151 - [IMPORTANT] [ml] Successfully trained logistic_regression
+2026-03-16 21:54:11 | INFO     | comment_analyzer.core.log_manager:log_important:151 - [IMPORTANT] [analysis] Topic modeling complete: 5 topics, 20 keywords
+2026-03-16 21:54:11 | INFO     | comment_analyzer.core.log_manager:log_important:151 - [IMPORTANT] [analysis] Demand analysis complete
+2026-03-16 21:54:11 | INFO     | comment_analyzer.core.pipeline:run:705 - Pipeline completed successfully
+2026-03-16 22:01:09 | INFO     | comment_analyzer.core.log_manager:configure:91 - Logging configured at level: INFO
+2026-03-16 22:01:10 | INFO     | comment_analyzer.core.pipeline:__init__:440 - CommentPipeline initialized (platform: generic)
+2026-03-16 22:01:33 | INFO     | comment_analyzer.core.log_manager:configure:91 - Logging configured at level: INFO
+2026-03-16 22:01:33 | INFO     | comment_analyzer.core.pipeline:__init__:440 - CommentPipeline initialized (platform: generic)
+2026-03-16 22:01:33 | INFO     | comment_analyzer.core.log_manager:log_data_info:243 - Data [bilibili_comments_merged.csv]: 1329 rows
+2026-03-16 22:01:33 | INFO     | comment_analyzer.core.pipeline:load_data:558 - Loaded 1329 rows from C:\Users\30847\Desktop\antigravity\Claude试验田\五芳斋数据分析项目\data\raw\bilibili_comments_merged.csv
+2026-03-16 22:01:33 | INFO     | comment_analyzer.core.log_manager:log_pipeline_start:198 - ============================================================
+Pipeline started
+2026-03-16 22:01:33 | INFO     | comment_analyzer.core.pipeline:run:652 - Using text column: 'content'
+2026-03-16 22:01:33 | INFO     | comment_analyzer.core.pipeline:run:653 - Processing 1329 comments...
+2026-03-16 22:01:41 | INFO     | comment_analyzer.core.log_manager:log_important:151 - [IMPORTANT] [ml] Successfully trained naive_bayes
+2026-03-16 22:01:41 | INFO     | comment_analyzer.core.log_manager:log_important:151 - [IMPORTANT] [ml] Successfully trained svm
+2026-03-16 22:01:41 | INFO     | comment_analyzer.core.log_manager:log_important:151 - [IMPORTANT] [ml] Successfully trained logistic_regression
+2026-03-16 22:01:53 | INFO     | comment_analyzer.core.log_manager:log_important:151 - [IMPORTANT] [analysis] Topic modeling complete: 5 topics, 20 keywords
+2026-03-16 22:02:12 | INFO     | comment_analyzer.core.log_manager:log_important:151 - [IMPORTANT] [analysis] Demand analysis complete
+2026-03-16 22:02:13 | INFO     | comment_analyzer.core.pipeline:run:705 - Pipeline completed successfully
+2026-03-16 22:02:13 | INFO     | comment_analyzer.core.pipeline:save:134 - Starting to save pipeline results...
+2026-03-16 22:02:13 | INFO     | comment_analyzer.core.output_manager:save_dataframe:186 - Saved DataFrame: [derived] processed_data.csv -> 001_processed_data.csv
+2026-03-16 22:02:13 | INFO     | comment_analyzer.core.output_manager:save_dataframe:186 - Saved DataFrame: [sentiment] sentiment_distribution.csv -> 001_sentiment_distribution.csv
+2026-03-16 22:02:13 | INFO     | comment_analyzer.core.log_manager:log_analysis:120 - Analysis [sentiment_distribution]: 3 results
+2026-03-16 22:02:13 | INFO     | comment_analyzer.core.output_manager:save_text:222 - Saved text file: [sentiment] model_report_naive_bayes.txt -> 002_model_report_naive_bayes.txt
+2026-03-16 22:02:13 | INFO     | comment_analyzer.core.log_manager:log_important:151 - [IMPORTANT] [ml] Trained naive_bayes model
+2026-03-16 22:02:13 | INFO     | comment_analyzer.core.output_manager:save_text:222 - Saved text file: [sentiment] model_report_svm.txt -> 003_model_report_svm.txt
+2026-03-16 22:02:13 | INFO     | comment_analyzer.core.log_manager:log_important:151 - [IMPORTANT] [ml] Trained svm model
+2026-03-16 22:02:13 | INFO     | comment_analyzer.core.output_manager:save_text:222 - Saved text file: [sentiment] model_report_logistic_regression.txt -> 004_model_report_logistic_regression.txt
+2026-03-16 22:02:13 | INFO     | comment_analyzer.core.log_manager:log_important:151 - [IMPORTANT] [ml] Trained logistic_regression model
+2026-03-16 22:02:13 | INFO     | comment_analyzer.core.output_manager:save_dataframe:186 - Saved DataFrame: [word_frequency] top_keywords.csv -> 001_top_keywords.csv
+2026-03-16 22:02:13 | INFO     | comment_analyzer.core.log_manager:log_important:151 - [IMPORTANT] [analysis] Top keywords: 粽子, 吃, 我, 粽, 都
+2026-03-16 22:02:13 | INFO     | comment_analyzer.core.output_manager:save_dataframe:186 - Saved DataFrame: [word_frequency] topics.csv -> 002_topics.csv
+2026-03-16 22:02:13 | INFO     | comment_analyzer.core.log_manager:log_analysis:120 - Analysis [topic_modeling]: 3 results
+2026-03-16 22:02:13 | INFO     | comment_analyzer.core.output_manager:save_dataframe:186 - Saved DataFrame: [demand] demand_intensity.csv -> 001_demand_intensity.csv
+2026-03-16 22:02:13 | INFO     | comment_analyzer.core.log_manager:log_analysis:120 - Analysis [demand_intensity]: 6 results
+2026-03-16 22:02:13 | INFO     | comment_analyzer.core.output_manager:save_dataframe:186 - Saved DataFrame: [demand] demand_correlation.csv -> 002_demand_correlation.csv
+2026-03-16 22:02:13 | INFO     | comment_analyzer.core.log_manager:log_important:151 - [IMPORTANT] [analysis] Demand correlation analysis completed
+2026-03-16 22:02:13 | INFO     | comment_analyzer.core.log_manager:log_important:151 - [IMPORTANT] [pipeline] Pipeline analysis completed successfully
+2026-03-16 22:02:13 | INFO     | comment_analyzer.core.log_manager:log_pipeline_end:214 - Pipeline completed in 39.50s
+2026-03-16 22:02:13 | INFO     | comment_analyzer.core.pipeline:save:151 - Saved 9 files successfully
+2026-03-16 22:02:13 | INFO     | comment_analyzer.visualization.generator:_generate_one:164 -   ✅ 评论情感极性分布 → sentiment_donut_220213.html
+2026-03-16 22:02:13 | INFO     | comment_analyzer.visualization.generator:_generate_one:164 -   ✅ 模型特征正负面双向对比 → features_bidirectional_220213.html
+2026-03-16 22:02:13 | INFO     | comment_analyzer.visualization.generator:_generate_one:164 -   ✅ 高频核心词汇 Top30 → features_lollipop_220213.html
+2026-03-16 22:02:13 | INFO     | comment_analyzer.visualization.generator:_generate_one:164 -   ✅ 多模型特征权重热力图 → features_heatmap_220213.html
+2026-03-16 22:02:13 | INFO     | comment_analyzer.visualization.generator:_generate_one:164 -   ✅ TF-IDF vs 词频对比 → features_tfidf_scatter_220213.html
+2026-03-16 22:02:13 | WARNING  | comment_analyzer.visualization.generator:generate_all:101 - Skipped chart 'topics_nightingale': Object of type float32 is not JSON serializable
+2026-03-16 22:02:13 | WARNING  | comment_analyzer.visualization.generator:generate_all:101 - Skipped chart 'topics_bubble': Object of type float32 is not JSON serializable
+2026-03-16 22:02:13 | INFO     | comment_analyzer.visualization.generator:_generate_one:164 -   ✅ 模型评估雷达图 → topics_radar_220213.html
+2026-03-16 22:02:13 | INFO     | comment_analyzer.visualization.generator:_generate_one:164 -   ✅ 需求共现网络关系图 → demand_network_220213.html
+2026-03-16 22:02:13 | INFO     | comment_analyzer.visualization.generator:generate_all:103 - Generated 7/14 charts → C:\Users\30847\.sentidemand\outputs\bilibili_comments_merged_20260316
+2026-03-16 22:03:28 | INFO     | comment_analyzer.core.log_manager:configure:91 - Logging configured at level: INFO
+2026-03-16 22:03:28 | INFO     | comment_analyzer.core.pipeline:__init__:440 - CommentPipeline initialized (platform: generic)
+2026-03-16 22:03:28 | INFO     | comment_analyzer.core.log_manager:log_data_info:243 - Data [bilibili_comments_merged.csv]: 1329 rows
+2026-03-16 22:03:28 | INFO     | comment_analyzer.core.pipeline:load_data:558 - Loaded 1329 rows from C:\Users\30847\Desktop\antigravity\Claude试验田\五芳斋数据分析项目\data\raw\bilibili_comments_merged.csv
+2026-03-16 22:03:28 | INFO     | comment_analyzer.core.log_manager:log_pipeline_start:198 - ============================================================
+Pipeline started
+2026-03-16 22:03:28 | INFO     | comment_analyzer.core.pipeline:run:652 - Using text column: 'content'
+2026-03-16 22:03:28 | INFO     | comment_analyzer.core.pipeline:run:653 - Processing 1329 comments...
+2026-03-16 22:03:42 | INFO     | comment_analyzer.core.log_manager:log_important:151 - [IMPORTANT] [ml] Successfully trained naive_bayes
+2026-03-16 22:03:42 | INFO     | comment_analyzer.core.log_manager:log_important:151 - [IMPORTANT] [ml] Successfully trained svm
+2026-03-16 22:03:42 | INFO     | comment_analyzer.core.log_manager:log_important:151 - [IMPORTANT] [ml] Successfully trained logistic_regression
+2026-03-16 22:04:02 | INFO     | comment_analyzer.core.log_manager:log_important:151 - [IMPORTANT] [analysis] Topic modeling complete: 5 topics, 20 keywords
+2026-03-16 22:04:33 | INFO     | comment_analyzer.core.log_manager:log_important:151 - [IMPORTANT] [analysis] Demand analysis complete
+2026-03-16 22:04:33 | INFO     | comment_analyzer.core.pipeline:run:705 - Pipeline completed successfully
+2026-03-16 22:04:33 | INFO     | comment_analyzer.visualization.generator:_generate_one:169 -   ✅ 评论情感极性分布 → sentiment_donut_220433.html
+2026-03-16 22:04:33 | INFO     | comment_analyzer.visualization.generator:_generate_one:169 -   ✅ 模型特征正负面双向对比 → features_bidirectional_220433.html
+2026-03-16 22:04:33 | INFO     | comment_analyzer.visualization.generator:_generate_one:169 -   ✅ 高频核心词汇 Top30 → features_lollipop_220433.html
+2026-03-16 22:04:33 | INFO     | comment_analyzer.visualization.generator:_generate_one:169 -   ✅ 多模型特征权重热力图 → features_heatmap_220433.html
+2026-03-16 22:04:33 | INFO     | comment_analyzer.visualization.generator:_generate_one:169 -   ✅ TF-IDF vs 词频对比 → features_tfidf_scatter_220433.html
+2026-03-16 22:04:33 | INFO     | comment_analyzer.visualization.generator:_generate_one:169 -   ✅ LDA 主题占比玫瑰图 → topics_nightingale_220433.html
+2026-03-16 22:04:33 | INFO     | comment_analyzer.visualization.generator:_generate_one:169 -   ✅ 主题关键词气泡矩阵 → topics_bubble_220433.html
+2026-03-16 22:04:33 | INFO     | comment_analyzer.visualization.generator:_generate_one:169 -   ✅ 模型评估雷达图 → topics_radar_220433.html
+2026-03-16 22:04:33 | INFO     | comment_analyzer.visualization.generator:_generate_one:169 -   ✅ 需求共现网络关系图 → demand_network_220433.html
+2026-03-16 22:04:33 | INFO     | comment_analyzer.visualization.generator:generate_all:103 - Generated 9/14 charts → C:\Users\30847\.sentidemand\outputs\bilibili_comments_merged_20260316

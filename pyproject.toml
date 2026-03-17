@@ -37,6 +37,9 @@ dependencies = [
     "gensim>=4.0.0",
     "pyyaml>=6.0",
     "tqdm>=4.62.0",
+    "loguru>=0.7.0",
+    "pydantic>=2.0.0",
+    "pydantic-settings>=2.0.0",
 ]
 
 [project.optional-dependencies]
@@ -47,6 +50,11 @@ dev = [
     "flake8>=5.0.0",
     "mypy>=1.0.0",
     "sphinx>=5.0.0",
+]
+viz = [
+    "fastapi>=0.110.0",
+    "uvicorn>=0.29.0",
+    "python-multipart>=0.0.9",
 ]
 
 [project.urls]
@@ -59,7 +67,12 @@ Issues = "https://github.com/yourusername/comment-analyzer/issues"
 where = ["src"]
 
 [tool.setuptools.package-data]
-comment_analyzer = ["../config/*.txt", "../config/*.json", "../config/*.yaml"]
+comment_analyzer = [
+    "../config/*.txt",
+    "../config/*.json",
+    "../config/*.yaml",
+    "visualization/templates/*.html",
+]
 
 [tool.black]
 line-length = 100

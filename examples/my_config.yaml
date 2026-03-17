@@ -1,0 +1,110 @@
+app_name: comment-analyzer
+app_version: 0.2.0
+data:
+  date_column_keywords:
+  - date
+  - time
+  - created
+  - 时间
+  - 日期
+  platform: generic
+  rating_column_keywords:
+  - rating
+  - score
+  - star
+  - 评分
+  - 星级
+  text_column_keywords:
+  - content
+  - comment
+  - review
+  - text
+  - 评论
+  - 内容
+debug: false
+demand:
+  correlation:
+    method: cooccurrence
+    min_cooccurrence: 2
+    window_size: 50
+  intensity:
+    method: tfidf_weighted
+    normalization: minmax
+logging:
+  compression: zip
+  format_string: '<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level: <8}</level>
+    | <cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>'
+  level: INFO
+  log_to_console: true
+  log_to_file: true
+  retention: 30 days
+  rotation: 10 MB
+output:
+  csv_index: false
+  encoding: utf-8-sig
+  float_format: '%.4f'
+  save_intermediate: false
+  sequence_padding: 4
+  use_sequence_numbers: true
+paths:
+  config_dir: !!python/object/apply:pathlib.WindowsPath
+  - config
+  demand_folder: demand_analysis
+  derived_columns_folder: derived_columns
+  logs_folder: logs
+  output_base: ./my_outputs
+  sentiment_folder: sentiment_models
+  word_frequency_folder: word_frequency
+preprocessing:
+  clean:
+    normalize_whitespace: true
+    remove_emails: true
+    remove_extra_spaces: true
+    remove_html: true
+    remove_urls: true
+  segmentation:
+    custom_dict_path: null
+    mode: precise
+  stopwords:
+    custom_path: null
+    extra_words: []
+    use_default: true
+sentiment:
+  balance:
+    enabled: true
+    method: undersample
+    random_state: 42
+  labeling_method: snownlp
+  models:
+    logistic_regression:
+      C: 1.0
+      enabled: true
+      max_iter: 1000
+    naive_bayes:
+      alpha: 1.0
+      enabled: true
+    svm:
+      C: 1.0
+      enabled: true
+      kernel: linear
+  snownlp:
+    threshold_negative: 0.4
+    threshold_positive: 0.6
+  tfidf:
+    max_df: 0.95
+    max_features: 5000
+    min_df: 2
+    ngram_range:
+    - 1
+    - 2
+topic:
+  keywords:
+    method: tfidf
+    top_k: 20
+  lda:
+    alpha: auto
+    eta: auto
+    iterations: 100
+    num_topics: 8
+    passes: 15
+    random_state: 42

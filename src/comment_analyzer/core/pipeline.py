@@ -4,21 +4,29 @@ This module provides the main CommentPipeline class that orchestrates
 the entire analysis workflow from data loading to result generation.
 """
 
+from __future__ import annotations
+
 import re
+import time
 from dataclasses import dataclass, field
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import pandas as pd
+from loguru import logger
 from tqdm import tqdm
 
 from comment_analyzer.core.config import Config
+from comment_analyzer.core.log_manager import LogManager, get_log_manager, init_logging
+from comment_analyzer.core.output_manager import OutputManager, SavedFileInfo
+from comment_analyzer.core.settings import Settings, get_settings
 from comment_analyzer.preprocessing.cleaner import TextCleaner
-from comment_analyzer.preprocessing.segmenter import JiebaSegmenter
 from comment_analyzer.preprocessing.filter import StopwordFilter
+from comment_analyzer.preprocessing.segmenter import JiebaSegmenter
+from comment_analyzer.sentiment.classifier import Classifier, ModelResults
 from comment_analyzer.sentiment.labeler import SentimentLabeler
 from comment_analyzer.sentiment.vectorizer import TFIDFVectorizer
-from comment_analyzer.sentiment.classifier import Classifier, ModelResults
 from comment_analyzer.topic.keywords import KeywordExtractor
 from comment_analyzer.topic.lda import LDAModel
 from comment_analyzer.demand.intensity import DemandIntensityCalculator
@@ -39,6 +47,11 @@ class PipelineResults:
         demand_intensity: DataFrame with demand category intensities
         demand_correlation: DataFrame with demand correlation matrix
         config: Configuration used for the analysis
+        output_manager: OutputManager for saving results
+        log_manager: LogManager for logging important information
+        saved_files: List of saved file information
+        start_time: Pipeline start timestamp
+        end_time: Pipeline end timestamp
     """
 
     original_data: pd.DataFrame = field(repr=False)
@@ -50,6 +63,21 @@ class PipelineResults:
     demand_intensity: Optional[pd.DataFrame] = None
     demand_correlation: Optional[pd.DataFrame] = None
     config: Optional[Config] = None
+    settings: Optional[Settings] = None
+    output_manager: Optional[OutputManager] = None
+    log_manager: Optional[LogManager] = None
+    saved_files: List[SavedFileInfo] = field(default_factory=list)
+    start_time: Optional[datetime] = None
+    end_time: Optional[datetime] = None
+
+    def __post_init__(self):
+        """Initialize managers if not provided."""
+        if self.settings is None:
+            self.settings = get_settings()
+        if self.output_manager is None:
+            self.output_manager = OutputManager(self.settings)
+        if self.log_manager is None:
+            self.log_manager = get_log_manager()
 
     def summary(self) -> str:
         """Generate a text summary of the analysis results."""
@@ -82,43 +110,149 @@ class PipelineResults:
                 avg = self.demand_intensity[col].mean()
                 lines.append(f"  {col}: {avg:.4f}")
 
+        if self.saved_files:
+            lines.append(f"\n--- Saved Files ({len(self.saved_files)} total) ---")
+            for info in self.saved_files[-5:]:  # Show last 5
+                lines.append(f"  [{info.category}] {info.final_path.name}")
+
         lines.append("\n" + "=" * 50)
         return "\n".join(lines)
 
-    def save(self, output_dir: Union[str, Path]) -> None:
-        """Save all results to the specified directory.
+    def save(self, output_dir: Optional[Union[str, Path]] = None) -> None:
+        """Save all results using the output manager with categorized folders.
 
         Args:
-            output_dir: Directory path where results will be saved.
+            output_dir: Optional custom output directory. If None, uses settings.
         """
-        output_dir = Path(output_dir)
-        output_dir.mkdir(parents=True, exist_ok=True)
+        if output_dir:
+            # Create temporary settings with custom path
+            from comment_analyzer.core.settings import PathConfig
+            custom_settings = self.settings.model_copy()
+            custom_settings.paths.output_base = Path(output_dir)
+            self.output_manager = OutputManager(custom_settings)
 
-        # Save processed data
-        self.processed_data.to_csv(
-            output_dir / "processed_data.csv",
-            index=False,
-            encoding='utf-8-sig'
-        )
+        logger.info("Starting to save pipeline results...")
 
+        # Save processed data (derived columns)
+        self._save_processed_data()
+
+        # Save sentiment analysis results
+        self._save_sentiment_results()
+
+        # Save topic modeling results
+        self._save_topic_results()
+
+        # Save demand analysis results
+        self._save_demand_results()
+
+        # Log important summary information
+        self._log_summary()
+
+        logger.info(f"Saved {len(self.saved_files)} files successfully")
+
+    def visualize(self, source_name: str = "analysis") -> List[str]:
+        """Generate all visualization charts as standalone HTML files.
+
+        Each file is saved to ``~/.sentidemand/outputs/{source}_{date}/``
+        and registered in ``manifest.json`` for history tracking.
+
+        Args:
+            source_name: Name of the data source (used in folder naming
+                         and manifest tracking). The original CSV filename
+                         without extension works well here.
+
+        Returns:
+            List of absolute paths to generated HTML files.
+
+        Example:
+            >>> results = pipeline.run(df)
+            >>> files = results.visualize("jd_comments")
+            >>> # Open any file in your browser to see the chart
+        """
+        from comment_analyzer.visualization.generator import VisualizationGenerator
+        gen = VisualizationGenerator(self.settings, self)
+        return gen.generate_all(source_name)
+
+    def _save_processed_data(self) -> None:
+        """Save processed data with derived columns."""
+        if self.processed_data is not None and not self.processed_data.empty:
+            info = self.output_manager.save_dataframe(
+                self.processed_data,
+                "processed_data.csv",
+                category="derived",
+                use_sequence=True
+            )
+            self.saved_files.append(info)
+            logger.debug(f"Saved processed data: {info.final_path}")
+
+    def _save_sentiment_results(self) -> None:
+        """Save sentiment analysis results to sentiment_models folder."""
         # Save sentiment distribution
         if self.sentiment_distribution:
-            pd.Series(self.sentiment_distribution).to_csv(
-                output_dir / "sentiment_distribution.csv",
-                header=['count']
+            df_dist = pd.DataFrame(
+                list(self.sentiment_distribution.items()),
+                columns=['sentiment', 'count']
+            )
+            info = self.output_manager.save_dataframe(
+                df_dist,
+                "sentiment_distribution.csv",
+                category="sentiment",
+                use_sequence=True
+            )
+            self.saved_files.append(info)
+
+            # Log important sentiment distribution info
+            self.log_manager.log_analysis(
+                "sentiment_distribution",
+                self.sentiment_distribution,
+                extra={"total_comments": len(self.original_data)}
             )
 
-        # Save model results
+        # Save model reports
         for name, results in self.sentiment_models.items():
             if hasattr(results, 'classification_report'):
-                with open(output_dir / f"model_report_{name}.txt", 'w') as f:
-                    f.write(results.classification_report)
+                info = self.output_manager.save_text(
+                    results.classification_report,
+                    f"model_report_{name}.txt",
+                    category="sentiment",
+                    use_sequence=True
+                )
+                self.saved_files.append(info)
 
+                # Log model results
+                if hasattr(results, 'metrics'):
+                    self.log_manager.log_model_result(
+                        name,
+                        results.metrics,
+                        params=getattr(results, 'params', None)
+                    )
+
+                # Log important model info
+                self.log_manager.log_important(
+                    f"Trained {name} model",
+                    category="ml",
+                    data={"has_report": True}
+                )
+
+    def _save_topic_results(self) -> None:
+        """Save topic modeling results to word_frequency folder."""
         # Save keywords
         if self.top_keywords:
-            pd.DataFrame(self.top_keywords, columns=['word', 'score']).to_csv(
-                output_dir / "top_keywords.csv",
-                index=False
+            df_keywords = pd.DataFrame(self.top_keywords, columns=['word', 'score'])
+            info = self.output_manager.save_dataframe(
+                df_keywords,
+                "top_keywords.csv",
+                category="word_frequency",
+                use_sequence=True
+            )
+            self.saved_files.append(info)
+
+            # Log important keywords info
+            top_5_words = [w for w, _ in self.top_keywords[:5]]
+            self.log_manager.log_important(
+                f"Top keywords: {', '.join(top_5_words)}",
+                category="analysis",
+                data={"keyword_count": len(self.top_keywords)}
             )
 
         # Save topics
@@ -131,16 +265,104 @@ class PipelineResults:
                         'word': word,
                         'weight': weight
                     })
-            pd.DataFrame(topics_df).to_csv(
-                output_dir / "topics.csv",
-                index=False
+            if topics_df:
+                df_topics = pd.DataFrame(topics_df)
+                info = self.output_manager.save_dataframe(
+                    df_topics,
+                    "topics.csv",
+                    category="word_frequency",
+                    use_sequence=True
+                )
+                self.saved_files.append(info)
+
+                # Log topic info
+                topic_summary = {
+                    f"topic_{i}": [w for w, _ in t.get('words', [])[:5]]
+                    for i, t in enumerate(self.topics[:3])
+                }
+                self.log_manager.log_analysis(
+                    "topic_modeling",
+                    topic_summary,
+                    extra={"num_topics": len(self.topics)}
+                )
+
+    def _save_demand_results(self) -> None:
+        """Save demand analysis results to demand_analysis folder."""
+        # Save demand intensity
+        if self.demand_intensity is not None and not self.demand_intensity.empty:
+            info = self.output_manager.save_dataframe(
+                self.demand_intensity,
+                "demand_intensity.csv",
+                category="demand",
+                use_sequence=True
+            )
+            self.saved_files.append(info)
+
+            # Log demand intensity summary
+            intensity_summary = {
+                col: float(self.demand_intensity[col].mean())
+                for col in self.demand_intensity.columns
+            }
+            self.log_manager.log_analysis(
+                "demand_intensity",
+                intensity_summary
             )
 
-        # Save demand analysis
-        if self.demand_intensity is not None:
-            self.demand_intensity.to_csv(output_dir / "demand_intensity.csv")
-        if self.demand_correlation is not None:
-            self.demand_correlation.to_csv(output_dir / "demand_correlation.csv")
+        # Save demand correlation
+        if self.demand_correlation is not None and not self.demand_correlation.empty:
+            info = self.output_manager.save_dataframe(
+                self.demand_correlation,
+                "demand_correlation.csv",
+                category="demand",
+                use_sequence=True
+            )
+            self.saved_files.append(info)
+
+            # Log important correlation info
+            self.log_manager.log_important(
+                "Demand correlation analysis completed",
+                category="analysis",
+                data={
+                    "correlation_shape": list(self.demand_correlation.shape),
+                    "columns": list(self.demand_correlation.columns)
+                }
+            )
+
+    def _log_summary(self) -> None:
+        """Log important summary information."""
+        duration = None
+        if self.start_time and self.end_time:
+            duration = (self.end_time - self.start_time).total_seconds()
+
+        summary_data = {
+            "total_comments": len(self.original_data),
+            "processed_comments": len(self.processed_data) if self.processed_data is not None else 0,
+            "sentiment_categories": list(self.sentiment_distribution.keys()),
+            "keyword_count": len(self.top_keywords),
+            "topic_count": len(self.topics),
+            "has_demand_analysis": self.demand_intensity is not None,
+            "saved_files_count": len(self.saved_files),
+            "duration_seconds": duration,
+        }
+
+        self.log_manager.log_important(
+            "Pipeline analysis completed successfully",
+            category="pipeline",
+            data=summary_data
+        )
+
+        if duration:
+            self.log_manager.log_pipeline_end(duration, summary_data)
+
+    def generate_output_summary(self) -> str:
+        """Generate a summary of all saved output files.
+
+        Returns:
+            Formatted summary string
+        """
+        if self.output_manager:
+            return self.output_manager.generate_summary()
+        return "No output manager available"
 
 
 class CommentPipeline:
@@ -155,11 +377,12 @@ to generating insights. It uses a configuration-driven approach for
         >>> df = pipeline.load_data("comments.csv")
         >>> results = pipeline.run(df)
         >>> print(results.summary())
-        >>> results.save("output/")
+        >>> results.save()
 
         >>> # With custom config
-        >>> config = Config.from_yaml("custom_config.yaml")
-        >>> pipeline = CommentPipeline(config)
+        >>> from comment_analyzer.core.settings import Settings
+        >>> settings = Settings()
+        >>> pipeline = CommentPipeline(settings=settings)
         >>> results = pipeline.run(df, text_column="review_text")
     """
 
@@ -182,79 +405,102 @@ to generating insights. It uses a configuration-driven approach for
         },
     }
 
-    def __init__(self, config: Optional[Config] = None):
+    def __init__(
+        self,
+        config: Optional[Config] = None,
+        settings: Optional[Settings] = None,
+        log_manager: Optional[LogManager] = None
+    ):
         """Initialize the pipeline with configuration.
 
         Args:
-            config: Configuration object. If None, uses default configuration.
+            config: Legacy Config object (for backward compatibility)
+            settings: New Settings object (recommended)
+            log_manager: Optional LogManager instance
         """
-        self.config = config or Config()
+        # Use settings if provided, otherwise convert from config, or use defaults
+        if settings is not None:
+            self.settings = settings
+        elif config is not None:
+            # Migrate from legacy config
+            self.settings = Settings(**config._config)
+            if hasattr(config, 'paths'):
+                self.settings.paths = config.paths
+        else:
+            self.settings = get_settings()
+
+        # Initialize logging
+        self.log_manager = log_manager or get_log_manager()
+        if not hasattr(LogManager, '_configured') or not LogManager._configured:
+            init_logging(self.settings)
 
         # Initialize components
         self._init_components()
+
+        logger.info(f"CommentPipeline initialized (platform: {self.settings.data.platform})")
 
     def _init_components(self) -> None:
         """Initialize all pipeline components based on configuration."""
         # Preprocessing
         self.cleaner = TextCleaner(
-            remove_urls=self.config.preprocessing.clean.remove_urls,
-            remove_emails=self.config.preprocessing.clean.remove_emails,
-            remove_html=self.config.preprocessing.clean.remove_html,
-            remove_extra_spaces=self.config.preprocessing.clean.remove_extra_spaces,
-            normalize_whitespace=self.config.preprocessing.clean.normalize_whitespace,
+            remove_urls=self.settings.preprocessing.clean.remove_urls,
+            remove_emails=self.settings.preprocessing.clean.remove_emails,
+            remove_html=self.settings.preprocessing.clean.remove_html,
+            remove_extra_spaces=self.settings.preprocessing.clean.remove_extra_spaces,
+            normalize_whitespace=self.settings.preprocessing.clean.normalize_whitespace,
         )
 
         self.segmenter = JiebaSegmenter(
-            mode=self.config.preprocessing.segmentation.mode,
-            custom_dict_path=self.config.preprocessing.segmentation.custom_dict_path,
+            mode=self.settings.preprocessing.segmentation.mode,
+            custom_dict_path=self.settings.preprocessing.segmentation.custom_dict_path,
         )
 
         self.stopword_filter = StopwordFilter(
-            stopwords_path=self.config.get_stopwords_path(),
-            extra_words=self.config.preprocessing.stopwords.extra_words,
+            stopwords_path=self.settings.get_stopwords_path(),
+            extra_words=self.settings.preprocessing.stopwords.extra_words,
         )
 
         # Sentiment
         self.sentiment_labeler = SentimentLabeler(
-            method=self.config.sentiment.labeling_method,
-            threshold_positive=self.config.sentiment.snownlp.threshold_positive,
-            threshold_negative=self.config.sentiment.snownlp.threshold_negative,
+            method=self.settings.sentiment.labeling_method,
+            threshold_positive=self.settings.sentiment.snownlp.threshold_positive,
+            threshold_negative=self.settings.sentiment.snownlp.threshold_negative,
         )
 
         self.vectorizer = TFIDFVectorizer(
-            max_features=self.config.sentiment.tfidf.max_features,
-            min_df=self.config.sentiment.tfidf.min_df,
-            max_df=self.config.sentiment.tfidf.max_df,
-            ngram_range=tuple(self.config.sentiment.tfidf.ngram_range),
+            max_features=self.settings.sentiment.tfidf.max_features,
+            min_df=self.settings.sentiment.tfidf.min_df,
+            max_df=self.settings.sentiment.tfidf.max_df,
+            ngram_range=tuple(self.settings.sentiment.tfidf.ngram_range),
         )
 
         # Topic
         self.keyword_extractor = KeywordExtractor(
-            method=self.config.topic.keywords.method,
-            top_k=self.config.topic.keywords.top_k,
+            method=self.settings.topic.keywords.method,
+            top_k=self.settings.topic.keywords.top_k,
         )
 
         self.lda_model = LDAModel(
-            num_topics=self.config.topic.lda.num_topics,
-            passes=self.config.topic.lda.passes,
-            iterations=self.config.topic.lda.iterations,
-            alpha=self.config.topic.lda.alpha,
-            eta=self.config.topic.lda.eta,
-            random_state=self.config.topic.lda.random_state,
+            num_topics=self.settings.topic.lda.num_topics,
+            passes=self.settings.topic.lda.passes,
+            iterations=self.settings.topic.lda.iterations,
+            alpha=self.settings.topic.lda.alpha,
+            eta=self.settings.topic.lda.eta,
+            random_state=self.settings.topic.lda.random_state,
         )
 
         # Demand
         self.demand_calculator = DemandIntensityCalculator(
-            keywords_path=self.config.get_demand_keywords_path(),
-            method=self.config.demand.intensity.method,
-            normalization=self.config.demand.intensity.normalization,
+            keywords_path=self.settings.get_demand_keywords_path(),
+            method=self.settings.demand.intensity.method,
+            normalization=self.settings.demand.intensity.normalization,
         )
 
         self.demand_correlator = DemandCorrelationAnalyzer(
             keywords=self.demand_calculator.keywords,
-            method=self.config.demand.correlation.method,
-            min_cooccurrence=self.config.demand.correlation.min_cooccurrence,
-            window_size=self.config.demand.correlation.window_size,
+            method=self.settings.demand.correlation.method,
+            min_cooccurrence=self.settings.demand.correlation.min_cooccurrence,
+            window_size=self.settings.demand.correlation.window_size,
         )
 
     def load_data(
@@ -298,10 +544,18 @@ to generating insights. It uses a configuration-driven approach for
             raise ValueError(f"Unsupported file format: {suffix}")
 
         # Standardize column names based on platform
-        platform = platform or self.config.data.platform
+        platform = platform or self.settings.data.platform
         if platform in self.PLATFORM_MAPPINGS:
             df = self._standardize_columns(df, platform)
 
+        # Log data loading
+        self.log_manager.log_data_info(
+            data_name=path.name,
+            row_count=len(df),
+            column_info={col: str(dtype) for col, dtype in df.dtypes.items()}
+        )
+
+        logger.info(f"Loaded {len(df)} rows from {path}")
         return df
 
     def _standardize_columns(self, df: pd.DataFrame, platform: str) -> pd.DataFrame:
@@ -334,7 +588,7 @@ to generating insights. It uses a configuration-driven approach for
         Raises:
             ValueError: If no suitable text column is found.
         """
-        keywords = self.config.data.text_column_keywords
+        keywords = self.settings.data.text_column_keywords
 
         # First try exact matches (case-insensitive)
         for col in df.columns:
@@ -382,11 +636,21 @@ to generating insights. It uses a configuration-driven approach for
         Returns:
             PipelineResults containing all analysis results.
         """
+        start_time = datetime.now()
         original_df = df.copy()
+
+        self.log_manager.log_pipeline_start({
+            "total_rows": len(df),
+            "columns": list(df.columns),
+            "platform": self.settings.data.platform,
+        })
 
         # Detect text column if not specified
         if text_column is None:
             text_column = self.detect_text_column(df)
+
+        logger.info(f"Using text column: '{text_column}'")
+        logger.info(f"Processing {len(df)} comments...")
 
         if verbose:
             print(f"Using text column: '{text_column}'")
@@ -416,6 +680,8 @@ to generating insights. It uses a configuration-driven approach for
 
         demand_results = self._run_demand_analysis(df, verbose)
 
+        end_time = datetime.now()
+
         # Compile results
         results = PipelineResults(
             original_data=original_df,
@@ -426,12 +692,17 @@ to generating insights. It uses a configuration-driven approach for
             topics=topic_results['topics'],
             demand_intensity=demand_results.get('intensity'),
             demand_correlation=demand_results.get('correlation'),
-            config=self.config,
+            config=None,  # Legacy config not used
+            settings=self.settings,
+            log_manager=self.log_manager,
+            start_time=start_time,
+            end_time=end_time,
         )
 
         if verbose:
             print("\n" + results.summary())
 
+        logger.info("Pipeline completed successfully")
         return results
 
     def _run_preprocessing(
@@ -462,6 +733,7 @@ to generating insights. It uses a configuration-driven approach for
         # Create space-joined version for vectorization
         df['processed_text'] = df['filtered_text'].apply(lambda x: ' '.join(x))
 
+        logger.debug(f"Preprocessing complete: {len(df)} documents processed")
         return df
 
     def _run_sentiment_analysis(
@@ -486,37 +758,48 @@ to generating insights. It uses a configuration-driven approach for
         if valid_mask.sum() < 10:
             if verbose:
                 print("  Warning: Not enough valid samples for model training")
+            logger.warning("Not enough valid samples for model training")
             return {'distribution': distribution, 'models': models}
 
         X_train = self.vectorizer.fit_transform(df.loc[valid_mask, 'processed_text'])
         y_train = df.loc[valid_mask, 'sentiment']
 
         # Balance samples if enabled
-        if self.config.sentiment.balance.enabled:
+        if self.settings.sentiment.balance.enabled:
             if verbose:
                 print("  Balancing samples...")
             X_train, y_train = self._balance_samples(X_train, y_train)
 
         # Train models
-        model_configs = self.config.sentiment.models
+        model_configs = self.settings.sentiment.models
 
         for model_name in ['naive_bayes', 'svm', 'logistic_regression']:
-            if not getattr(model_configs, model_name).enabled:
+            model_config = getattr(model_configs, model_name)
+            if not model_config.enabled:
                 continue
 
             if verbose:
                 print(f"  Training {model_name}...")
 
-            classifier = Classifier(model_name)
-            model_results = classifier.train(X_train, y_train)
-            models[model_name] = model_results
+            try:
+                classifier = Classifier(model_name)
+                model_results = classifier.train(X_train, y_train)
+                models[model_name] = model_results
+
+                self.log_manager.log_important(
+                    f"Successfully trained {model_name}",
+                    category="ml"
+                )
+            except Exception as e:
+                logger.error(f"Failed to train {model_name}: {e}")
+                self.log_manager.log_error(e, {"model": model_name}, category="ml")
 
         return {'distribution': distribution, 'models': models}
 
     def _balance_samples(self, X, y):
         """Balance sample distribution."""
-        method = self.config.sentiment.balance.method
-        random_state = self.config.sentiment.balance.random_state
+        method = self.settings.sentiment.balance.method
+        random_state = self.settings.sentiment.balance.random_state
 
         if method == 'undersample':
             from sklearn.utils import resample
@@ -579,6 +862,7 @@ to generating insights. It uses a configuration-driven approach for
         if len(valid_texts) < 10:
             if verbose:
                 print("  Warning: Not enough valid samples for topic modeling")
+            logger.warning("Not enough valid samples for topic modeling")
             return {'keywords': [], 'topics': []}
 
         # Extract keywords
@@ -590,6 +874,11 @@ to generating insights. It uses a configuration-driven approach for
         if verbose:
             print("  Building LDA model...")
         topics = self.lda_model.fit_transform(df.loc[valid_mask, 'filtered_text'].tolist())
+
+        self.log_manager.log_important(
+            f"Topic modeling complete: {len(topics)} topics, {len(keywords)} keywords",
+            category="analysis"
+        )
 
         return {'keywords': keywords, 'topics': topics}
 
@@ -606,6 +895,7 @@ to generating insights. It uses a configuration-driven approach for
         if len(valid_texts) < 10:
             if verbose:
                 print("  Warning: Not enough valid samples for demand analysis")
+            logger.warning("Not enough valid samples for demand analysis")
             return {}
 
         # Calculate demand intensity
@@ -617,5 +907,14 @@ to generating insights. It uses a configuration-driven approach for
         if verbose:
             print("  Calculating demand correlation...")
         correlation_df = self.demand_correlator.analyze(valid_texts)
+
+        self.log_manager.log_important(
+            "Demand analysis complete",
+            category="analysis",
+            data={
+                "intensity_shape": list(intensity_df.shape) if intensity_df is not None else None,
+                "correlation_shape": list(correlation_df.shape) if correlation_df is not None else None,
+            }
+        )
 
         return {'intensity': intensity_df, 'correlation': correlation_df}
