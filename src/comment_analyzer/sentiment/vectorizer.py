@@ -3,6 +3,7 @@
 Provides TF-IDF vectorization for text classification.
 """
 
+from math import ceil
 from typing import List, Optional, Tuple, Union
 
 import pandas as pd
@@ -57,20 +58,67 @@ class TFIDFVectorizer:
         self.min_df = min_df
         self.max_df = max_df
         self.ngram_range = ngram_range
+        self.stop_words = stop_words
+        self.use_idf = use_idf
+        self.smooth_idf = smooth_idf
+        self.sublinear_tf = sublinear_tf
 
-        self._vectorizer = SklearnTfidfVectorizer(
-            max_features=max_features,
-            min_df=min_df,
-            max_df=max_df,
-            ngram_range=ngram_range,
-            stop_words=stop_words,
-            use_idf=use_idf,
-            smooth_idf=smooth_idf,
-            sublinear_tf=sublinear_tf,
-            token_pattern=r'(?u)\b\w+\b',  # Match Chinese characters
-        )
+        self._vectorizer = self._create_vectorizer(min_df=min_df, max_df=max_df)
 
         self._is_fitted = False
+
+    def _create_vectorizer(
+        self,
+        min_df: Union[int, float],
+        max_df: Union[int, float],
+    ) -> SklearnTfidfVectorizer:
+        return SklearnTfidfVectorizer(
+            max_features=self.max_features,
+            min_df=min_df,
+            max_df=max_df,
+            ngram_range=self.ngram_range,
+            stop_words=self.stop_words,
+            use_idf=self.use_idf,
+            smooth_idf=self.smooth_idf,
+            sublinear_tf=self.sublinear_tf,
+            token_pattern=r'(?u)\b\w+\b',
+        )
+
+    def _resolve_doc_frequency_thresholds(self, document_count: int) -> Tuple[Union[int, float], Union[int, float]]:
+        """Relax thresholds for tiny corpora so uploads with only a few rows still work."""
+        min_df = self.min_df
+        max_df = self.max_df
+
+        if document_count <= 1:
+            return 1, 1.0
+        if document_count < 5:
+            return 1, 1.0
+
+        if isinstance(min_df, int):
+            min_df = max(1, min(min_df, document_count))
+        else:
+            min_df = max(0.0, min(min_df, 1.0))
+
+        if isinstance(max_df, int):
+            max_df = max(1, min(max_df, document_count))
+        else:
+            max_df = max(0.0, min(max_df, 1.0))
+
+        if isinstance(min_df, int) and not isinstance(max_df, int):
+            if max_df * document_count < min_df:
+                min_df = 1
+        elif not isinstance(min_df, int) and isinstance(max_df, int):
+            min_required_docs = max(1, ceil(min_df * document_count))
+            if max_df < min_required_docs:
+                max_df = document_count
+        elif isinstance(min_df, int) and isinstance(max_df, int) and max_df < min_df:
+            min_df = 1
+            max_df = max(max_df, 1)
+        elif not isinstance(min_df, int) and not isinstance(max_df, int) and max_df < min_df:
+            min_df = min(min_df, 0.5)
+            max_df = max(max_df, min_df)
+
+        return min_df, max_df
 
     def fit(self, texts: List[str]) -> "TFIDFVectorizer":
         """Fit the vectorizer to the texts.
@@ -81,6 +129,8 @@ class TFIDFVectorizer:
         Returns:
             Self for method chaining.
         """
+        min_df, max_df = self._resolve_doc_frequency_thresholds(len(texts))
+        self._vectorizer = self._create_vectorizer(min_df=min_df, max_df=max_df)
         self._vectorizer.fit(texts)
         self._is_fitted = True
         return self
@@ -110,6 +160,8 @@ class TFIDFVectorizer:
         Returns:
             Sparse matrix of TF-IDF features.
         """
+        min_df, max_df = self._resolve_doc_frequency_thresholds(len(texts))
+        self._vectorizer = self._create_vectorizer(min_df=min_df, max_df=max_df)
         result = self._vectorizer.fit_transform(texts)
         self._is_fitted = True
         return result

@@ -74,7 +74,7 @@ class VisualizationGenerator:
 
     # ── Public API ────────────────────────────────────────────────
 
-    def generate_all(self, source_name: str) -> List[str]:
+    def generate_all(self, source_name: str, run_id: Optional[str] = None) -> List[str]:
         """Generate all enabled charts.
 
         Args:
@@ -94,6 +94,7 @@ class VisualizationGenerator:
                 path = self._generate_one(
                     chart_type, module, func_name, title,
                     source_name, output_dir,
+                    run_id=run_id,
                 )
                 if path:
                     generated.append(path)
@@ -107,7 +108,7 @@ class VisualizationGenerator:
 
         return generated
 
-    def generate_chart(self, chart_type: str, source_name: str) -> Optional[str]:
+    def generate_chart(self, chart_type: str, source_name: str, run_id: Optional[str] = None) -> Optional[str]:
         """Generate a single chart by type name.
 
         Args:
@@ -122,7 +123,7 @@ class VisualizationGenerator:
 
         module, func_name, title = self.CHART_REGISTRY[chart_type]
         output_dir = self._prepare_output_dir(source_name)
-        return self._generate_one(chart_type, module, func_name, title, source_name, output_dir)
+        return self._generate_one(chart_type, module, func_name, title, source_name, output_dir, run_id=run_id)
 
     # ── Internal logic ────────────────────────────────────────────
 
@@ -134,6 +135,7 @@ class VisualizationGenerator:
         title: str,
         source_name: str,
         output_dir: Path,
+        run_id: Optional[str] = None,
     ) -> Optional[str]:
         """Generate a single chart HTML file."""
         import importlib
@@ -169,7 +171,7 @@ class VisualizationGenerator:
         logger.info(f"  ✅ {title} → {filename}")
 
         # Update manifest
-        self._update_manifest(source_name, chart_type, title, filepath)
+        self._update_manifest(source_name, chart_type, title, filepath, run_id=run_id)
 
         return str(filepath)
 
@@ -250,6 +252,7 @@ class VisualizationGenerator:
         chart_type: str,
         title: str,
         filepath: Path,
+        run_id: Optional[str] = None,
     ) -> None:
         manifest = self._load_manifest()
         vis_root = self.settings.paths.get_visualization_path()
@@ -257,6 +260,7 @@ class VisualizationGenerator:
 
         entry = {
             "id": uuid.uuid4().hex[:8],
+            "run_id": run_id,
             "source_file": source_name,
             "source_hash": self._get_source_hash(),
             "chart_type": chart_type,

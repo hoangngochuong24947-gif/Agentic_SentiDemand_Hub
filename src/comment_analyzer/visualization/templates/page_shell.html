@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{PAGE_TITLE}}</title>
+    <style>
+{{STYLES}}
+    </style>
+    {{EXTRA_HEAD}}
+</head>
+<body class="hub-shell">
+    <div class="ambient ambient-a"></div>
+    <div class="ambient ambient-b"></div>
+    <header class="hub-topbar">
+        <div>
+            <span class="hub-brand">SentiDemand Hub</span>
+            <span class="hub-subtitle">homepage / workspace / detail</span>
+        </div>
+        <nav class="hub-nav">
+            <a href="#upload">Upload</a>
+            <a href="#workspace">History</a>
+            <a href="#crawler-guidance">Crawler</a>
+        </nav>
+    </header>
+    <main class="hub-main">
+        {{CONTENT}}
+    </main>
+    {{EXTRA_SCRIPT}}
+</body>
+</html>

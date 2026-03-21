@@ -1,0 +1,46 @@
+==================================================
+Comment Analysis Summary
+==================================================
+
+Total comments: 474
+
+--- Sentiment Distribution ---
+  negative: 168 (35.4%)
+  neutral: 85 (17.9%)
+  positive: 221 (46.6%)
+
+--- Top Keywords ---
+  粽: 0.0814
+  粽子: 0.0809
+  吃: 0.0709
+  甜: 0.0522
+  doge: 0.0509
+  咸: 0.0433
+  喜欢: 0.0377
+  好吃: 0.0354
+  蘸: 0.0326
+  肉: 0.0319
+
+--- Topics ---
+  Topic 1: ，, 粽子, 吃, 甜, 。
+  Topic 2: ], [, 粽, doge, 吃
+  Topic 3: ，, 粽, [, ], 粽子
+  Topic 4: 粽, 粽子, ], [, ，
+  Topic 5: 沾, ，, 粽, ~, ！
+
+--- Demand Intensity ---
+  taste: 0.0574
+  price: 0.0021
+  quality: 0.0021
+  packaging: 0.0021
+  logistics: 0.0000
+  service: 0.0000
+
+--- Saved Files (9 total) ---
+  [sentiment] 004_model_report_logistic_regression.txt
+  [word_frequency] 001_top_keywords.csv
+  [word_frequency] 002_topics.csv
+  [demand] 001_demand_intensity.csv
+  [demand] 002_demand_correlation.csv
+
+==================================================

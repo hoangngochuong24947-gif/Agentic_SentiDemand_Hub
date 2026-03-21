@@ -70,14 +70,27 @@ class LDAModel:
         Returns:
             Self for method chaining.
         """
-        # Create dictionary
-        self.dictionary = corpora.Dictionary(documents)
+        normalized_documents = [doc for doc in documents if doc]
+        if not normalized_documents:
+            raise ValueError("cannot fit LDA on an empty collection")
 
-        # Filter extremes (optional but recommended)
-        self.dictionary.filter_extremes(no_below=2, no_above=0.9)
+        # Create dictionary
+        self.dictionary = corpora.Dictionary(normalized_documents)
+
+        # Keep tiny corpora usable while still trimming obvious noise for larger uploads.
+        no_below = 1 if len(normalized_documents) < 5 else 2
+        no_above = 1.0 if len(normalized_documents) < 5 else 0.9
+        self.dictionary.filter_extremes(no_below=no_below, no_above=no_above)
+
+        if len(self.dictionary) == 0:
+            # If aggressive filtering emptied the dictionary, fall back to raw vocabulary.
+            self.dictionary = corpora.Dictionary(normalized_documents)
 
         # Create corpus (bag-of-words)
-        self.corpus = [self.dictionary.doc2bow(doc) for doc in documents]
+        self.corpus = [self.dictionary.doc2bow(doc) for doc in normalized_documents]
+
+        if not any(self.corpus):
+            raise ValueError("cannot fit LDA on an empty collection")
 
         # Set random state for gensim
         np.random.seed(self.random_state)
@@ -135,7 +148,7 @@ class LDAModel:
                 prob for doc in self.corpus
                 for t, prob in self.model.get_document_topics(doc)
                 if t == topic_id
-            ) / len(self.corpus)
+            ) / max(len(self.corpus), 1)
 
             topics.append({
                 'id': topic_id,

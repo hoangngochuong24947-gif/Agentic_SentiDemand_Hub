@@ -1,0 +1,46 @@
+==================================================
+Comment Analysis Summary
+==================================================
+
+Total comments: 1256
+
+--- Sentiment Distribution ---
+  negative: 547 (43.6%)
+  neutral: 89 (7.1%)
+  positive: 620 (49.4%)
+
+--- Top Keywords ---
+  粽子: 0.0575
+  吃: 0.0508
+  好吃: 0.0496
+  肉: 0.0426
+  买: 0.0391
+  好: 0.0367
+  非常: 0.0351
+  五芳斋: 0.0351
+  味道: 0.0322
+  粽: 0.0307
+
+--- Topics ---
+  Topic 1: ，, 。, 粽子, 吃, 五芳斋
+  Topic 2: ，, ！, 粽子, 好, 。
+  Topic 3: ！, ，, ？, 差评, 太
+  Topic 4: ，, 粽子, ？, 吃, 推荐
+  Topic 5: 。, 好, 粽, 快递, 根本
+
+--- Demand Intensity ---
+  taste: 0.1131
+  price: 0.0398
+  quality: 0.0308
+  packaging: 0.0390
+  logistics: 0.0585
+  service: 0.0150
+
+--- Saved Files (9 total) ---
+  [sentiment] 004_model_report_logistic_regression.txt
+  [word_frequency] 001_top_keywords.csv
+  [word_frequency] 002_topics.csv
+  [demand] 001_demand_intensity.csv
+  [demand] 002_demand_correlation.csv
+
+==================================================

@@ -79,6 +79,31 @@ class TestPipelineResults:
         results.save(output_dir)
         assert (output_dir / "processed_data.csv").exists()
 
+    def test_run_record_summary(self):
+        df = pd.DataFrame({"text": ["test1", "test2"]})
+        results = PipelineResults(
+            original_data=df,
+            processed_data=df,
+            sentiment_distribution={"positive": 1, "negative": 1},
+            top_keywords=[("word", 0.5)],
+            topics=[{"id": 0, "words": [("test", 0.1)]}],
+        )
+
+        record = results.to_run_record(
+            run_id="run-123",
+            source_file="comments.csv",
+            user_message="Upload completed",
+            charts=[{"name": "sentiment_donut", "path": "charts/sentiment_donut.html"}],
+        )
+
+        assert record["run_id"] == "run-123"
+        assert record["source_file"] == "comments.csv"
+        assert record["status"] == "completed"
+        assert record["derived_tables"]
+        assert record["logs"]
+        assert record["charts"]
+        assert record["user_message"] == "Upload completed"
+
 
 class TestCommentPipeline:
     """Tests for CommentPipeline class."""

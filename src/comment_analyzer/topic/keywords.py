@@ -54,6 +54,15 @@ class KeywordExtractor:
         self._vectorizer = None
         self._is_fitted = False
 
+    def _resolve_doc_frequency_thresholds(self, document_count: int) -> Tuple[int, float]:
+        min_df = max(1, min(self.min_df, document_count))
+        max_df = max(0.0, min(self.max_df, 1.0))
+        if document_count <= 1:
+            return 1, 1.0
+        if max_df * document_count < min_df:
+            min_df = 1
+        return min_df, max_df
+
     def extract(self, texts: List[str]) -> List[Tuple[str, float]]:
         """Extract keywords from a corpus of texts.
 
@@ -63,11 +72,18 @@ class KeywordExtractor:
         Returns:
             List of (keyword, score) tuples sorted by score.
         """
+        if not texts:
+            self._vectorizer = None
+            self._is_fitted = True
+            return []
+
+        min_df, max_df = self._resolve_doc_frequency_thresholds(len(texts))
+
         # Create and fit TF-IDF vectorizer
         self._vectorizer = SklearnTfidfVectorizer(
             max_features=self.max_features,
-            min_df=self.min_df,
-            max_df=self.max_df,
+            min_df=min_df,
+            max_df=max_df,
             token_pattern=r'(?u)\b\w+\b',
         )
 
@@ -100,6 +116,8 @@ class KeywordExtractor:
         """
         if not self._is_fitted:
             raise ValueError("Extractor must be fitted before extracting document keywords")
+        if self._vectorizer is None:
+            return []
 
         # Transform the document
         tfidf_vector = self._vectorizer.transform([text])

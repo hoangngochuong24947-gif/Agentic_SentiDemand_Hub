@@ -8,6 +8,8 @@ from __future__ import annotations
 
 import re
 import time
+import uuid
+import shutil
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
@@ -31,6 +33,10 @@ from comment_analyzer.topic.keywords import KeywordExtractor
 from comment_analyzer.topic.lda import LDAModel
 from comment_analyzer.demand.intensity import DemandIntensityCalculator
 from comment_analyzer.demand.correlation import DemandCorrelationAnalyzer
+from comment_analyzer.visualization.run_registry import (
+    RunRecord,
+    build_run_record,
+)
 
 
 @dataclass
@@ -69,6 +75,7 @@ class PipelineResults:
     saved_files: List[SavedFileInfo] = field(default_factory=list)
     start_time: Optional[datetime] = None
     end_time: Optional[datetime] = None
+    run_id: Optional[str] = None
 
     def __post_init__(self):
         """Initialize managers if not provided."""
@@ -128,13 +135,26 @@ class PipelineResults:
             # Create temporary settings with custom path
             from comment_analyzer.core.settings import PathConfig
             custom_settings = self.settings.model_copy()
-            custom_settings.paths.output_base = Path(output_dir)
+            custom_settings.paths = PathConfig(
+                output_base=Path(output_dir),
+                visualization_base=custom_settings.paths.visualization_base,
+                upload_dir=custom_settings.paths.upload_dir,
+                config_dir=custom_settings.paths.config_dir,
+            )
             self.output_manager = OutputManager(custom_settings)
 
         logger.info("Starting to save pipeline results...")
 
         # Save processed data (derived columns)
         self._save_processed_data()
+        if output_dir:
+            latest_processed = next(
+                (info for info in reversed(self.saved_files) if info.original_name == "processed_data.csv"),
+                None,
+            )
+            if latest_processed is not None:
+                root_copy = Path(output_dir) / "processed_data.csv"
+                shutil.copyfile(latest_processed.final_path, root_copy)
 
         # Save sentiment analysis results
         self._save_sentiment_results()
@@ -150,7 +170,7 @@ class PipelineResults:
 
         logger.info(f"Saved {len(self.saved_files)} files successfully")
 
-    def visualize(self, source_name: str = "analysis") -> List[str]:
+    def visualize(self, source_name: str = "analysis", run_id: Optional[str] = None) -> List[str]:
         """Generate all visualization charts as standalone HTML files.
 
         Each file is saved to ``~/.sentidemand/outputs/{source}_{date}/``
@@ -171,22 +191,48 @@ class PipelineResults:
         """
         from comment_analyzer.visualization.generator import VisualizationGenerator
         gen = VisualizationGenerator(self.settings, self)
-        return gen.generate_all(source_name)
+        return gen.generate_all(source_name, run_id=run_id or self.run_id)
+
+    def to_run_record(
+        self,
+        run_id: Optional[str] = None,
+        source_file: str = "analysis",
+        charts: Optional[List[str]] = None,
+        status: str = "completed",
+        user_message: str = "",
+        failure_category: Optional[str] = None,
+        failure_message: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """Build a structured run record for registry storage."""
+
+        record: RunRecord = build_run_record(
+            run_id=run_id or self.run_id or uuid.uuid4().hex[:12],
+            source_file=source_file,
+            results=self,
+            charts=charts or [],
+            status=status,
+            user_message=user_message,
+            failure_category=failure_category,
+            failure_message=failure_message,
+        )
+        return record.to_dict()
 
     def _save_processed_data(self) -> None:
         """Save processed data with derived columns."""
+        use_sequence = self.output_manager.settings.output.use_sequence_numbers
         if self.processed_data is not None and not self.processed_data.empty:
             info = self.output_manager.save_dataframe(
                 self.processed_data,
                 "processed_data.csv",
                 category="derived",
-                use_sequence=True
+                use_sequence=use_sequence
             )
             self.saved_files.append(info)
             logger.debug(f"Saved processed data: {info.final_path}")
 
     def _save_sentiment_results(self) -> None:
         """Save sentiment analysis results to sentiment_models folder."""
+        use_sequence = self.output_manager.settings.output.use_sequence_numbers
         # Save sentiment distribution
         if self.sentiment_distribution:
             df_dist = pd.DataFrame(
@@ -197,7 +243,7 @@ class PipelineResults:
                 df_dist,
                 "sentiment_distribution.csv",
                 category="sentiment",
-                use_sequence=True
+                use_sequence=use_sequence
             )
             self.saved_files.append(info)
 
@@ -215,7 +261,7 @@ class PipelineResults:
                     results.classification_report,
                     f"model_report_{name}.txt",
                     category="sentiment",
-                    use_sequence=True
+                    use_sequence=use_sequence
                 )
                 self.saved_files.append(info)
 
@@ -236,6 +282,7 @@ class PipelineResults:
 
     def _save_topic_results(self) -> None:
         """Save topic modeling results to word_frequency folder."""
+        use_sequence = self.output_manager.settings.output.use_sequence_numbers
         # Save keywords
         if self.top_keywords:
             df_keywords = pd.DataFrame(self.top_keywords, columns=['word', 'score'])
@@ -243,7 +290,7 @@ class PipelineResults:
                 df_keywords,
                 "top_keywords.csv",
                 category="word_frequency",
-                use_sequence=True
+                use_sequence=use_sequence
             )
             self.saved_files.append(info)
 
@@ -271,7 +318,7 @@ class PipelineResults:
                     df_topics,
                     "topics.csv",
                     category="word_frequency",
-                    use_sequence=True
+                    use_sequence=use_sequence
                 )
                 self.saved_files.append(info)
 
@@ -288,13 +335,14 @@ class PipelineResults:
 
     def _save_demand_results(self) -> None:
         """Save demand analysis results to demand_analysis folder."""
+        use_sequence = self.output_manager.settings.output.use_sequence_numbers
         # Save demand intensity
         if self.demand_intensity is not None and not self.demand_intensity.empty:
             info = self.output_manager.save_dataframe(
                 self.demand_intensity,
                 "demand_intensity.csv",
                 category="demand",
-                use_sequence=True
+                use_sequence=use_sequence
             )
             self.saved_files.append(info)
 
@@ -314,7 +362,7 @@ class PipelineResults:
                 self.demand_correlation,
                 "demand_correlation.csv",
                 category="demand",
-                use_sequence=True
+                use_sequence=use_sequence
             )
             self.saved_files.append(info)
 
@@ -426,8 +474,11 @@ to generating insights. It uses a configuration-driven approach for
             self.settings = Settings(**config._config)
             if hasattr(config, 'paths'):
                 self.settings.paths = config.paths
+            self.config = config
         else:
             self.settings = get_settings()
+
+        self.config = config if config is not None else Config(self.settings.to_dict())
 
         # Initialize logging
         self.log_manager = log_manager or get_log_manager()
@@ -458,6 +509,8 @@ to generating insights. It uses a configuration-driven approach for
         self.stopword_filter = StopwordFilter(
             stopwords_path=self.settings.get_stopwords_path(),
             extra_words=self.settings.preprocessing.stopwords.extra_words,
+            strategy=self.settings.preprocessing.stopwords.strategy,
+            use_default=self.settings.preprocessing.stopwords.use_default,
         )
 
         # Sentiment
@@ -637,6 +690,7 @@ to generating insights. It uses a configuration-driven approach for
             PipelineResults containing all analysis results.
         """
         start_time = datetime.now()
+        run_id = uuid.uuid4().hex[:12]
         original_df = df.copy()
 
         self.log_manager.log_pipeline_start({
@@ -697,6 +751,7 @@ to generating insights. It uses a configuration-driven approach for
             log_manager=self.log_manager,
             start_time=start_time,
             end_time=end_time,
+            run_id=run_id,
         )
 
         if verbose:

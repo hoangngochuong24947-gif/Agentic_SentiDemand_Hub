@@ -180,3 +180,21 @@ class TestStopwordFilter:
         save_path = tmp_path / "test_stopwords.txt"
         filter_.save_stopwords(save_path)
         assert save_path.exists()
+
+    def test_hybrid_strategy_keeps_non_stopwords(self, tmp_path):
+        stopwords_file = tmp_path / "stopwords.txt"
+        stopwords_file.write_text("服务\n", encoding="utf-8")
+
+        filter_ = StopwordFilter(
+            stopwords_path=stopwords_file,
+            extra_words=["特別"],
+            strategy="hybrid",
+        )
+        words = ["好", "服务", "产品", "特別"]
+
+        result = filter_.filter(words)
+
+        assert "好" in result
+        assert "服务" not in result
+        assert "特別" not in result
+        assert "产品" in result

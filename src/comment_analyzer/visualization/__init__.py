@@ -13,6 +13,33 @@ Usage:
 """
 
 from comment_analyzer.visualization.generator import VisualizationGenerator
-from comment_analyzer.visualization.gallery import create_app, run_gallery_server
+from comment_analyzer.visualization.pages import (
+    DEFAULT_CRAWLER_GUIDANCE,
+    CrawlerGuideCard,
+    render_detail_page,
+    render_homepage_page,
+    render_workspace_page,
+)
 
-__all__ = ["VisualizationGenerator", "create_app", "run_gallery_server"]
+__all__ = [
+    "VisualizationGenerator",
+    "create_app",
+    "run_gallery_server",
+    "DEFAULT_CRAWLER_GUIDANCE",
+    "CrawlerGuideCard",
+    "render_detail_page",
+    "render_homepage_page",
+    "render_workspace_page",
+]
+
+
+def __getattr__(name: str):
+    if name in {"create_app", "run_gallery_server"}:
+        from comment_analyzer.visualization.gallery import create_app, run_gallery_server
+
+        exports = {
+            "create_app": create_app,
+            "run_gallery_server": run_gallery_server,
+        }
+        return exports[name]
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

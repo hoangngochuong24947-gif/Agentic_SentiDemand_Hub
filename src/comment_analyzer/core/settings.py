@@ -169,6 +169,7 @@ class StopwordsConfig(BaseModel):
     use_default: bool = True
     custom_path: Optional[Path] = None
     extra_words: List[str] = Field(default_factory=list)
+    strategy: Literal["default", "custom", "hybrid"] = "hybrid"
 
 
 class PreprocessingConfig(BaseModel):

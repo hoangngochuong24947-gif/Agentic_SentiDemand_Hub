@@ -40,7 +40,6 @@ Example:
 """
 
 from comment_analyzer.core.config import Config
-from comment_analyzer.core.pipeline import CommentPipeline, PipelineResults
 
 # New Pydantic-based settings
 from comment_analyzer.core.settings import (
@@ -90,3 +89,15 @@ __all__ = [
     "get_log_manager",
     "init_logging",
 ]
+
+
+def __getattr__(name: str):
+    if name in {"CommentPipeline", "PipelineResults"}:
+        from comment_analyzer.core.pipeline import CommentPipeline, PipelineResults
+
+        exports = {
+            "CommentPipeline": CommentPipeline,
+            "PipelineResults": PipelineResults,
+        }
+        return exports[name]
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
