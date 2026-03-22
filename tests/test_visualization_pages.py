@@ -4,118 +4,133 @@ from pathlib import Path
 
 from comment_analyzer.visualization.pages import (
     DEFAULT_CRAWLER_GUIDANCE,
-    render_detail_page,
+    render_dashboard_page,
     render_homepage_page,
+    render_insights_page,
+    render_legacy_page,
     render_workspace_page,
 )
 
 
-def test_render_homepage_page_contains_showcase_sections():
+def test_render_homepage_page_contains_new_navigation_and_actions():
     html = render_homepage_page(
         runs=[
             {
-                "title": "Run 2026-03-18",
+                "run_id": "run-001",
+                "title": "Run 001",
                 "status": "completed",
                 "created_at": "2026-03-18 09:12",
                 "source_name": "sample_comments.csv",
                 "summary": "Processed 3,240 comments",
-                "href": "/runs/2026-03-18",
+                "href": "/workspace/run-001",
             }
         ]
     )
 
-    assert "Agentic SentiDemand Hub" in html
-    assert "hero-marquee-track" in html
-    assert "选择评论文件" in html
-    assert "上传评论文件并直接进入分析详情" in html
-    assert "surface-card accent-help" in html
-    assert "surface-card accent-history" in html
-    assert "surface-card accent-crawler" in html
-    assert "history-card-grid" in html
-    assert "crawler-guidance-section" in html
-    assert "Crawler 01" in html
-    assert "采集脚本说明卡片" in html
+    assert "SentiDemand Hub v2" in html
+    assert "上传并分析" in html
+    assert "/workspace" in html
+    assert "/legacy" in html
+    assert "采集脚本说明" in html
 
 
-def test_render_workspace_page_lists_runs():
+def test_render_workspace_page_contains_table_panel_and_cross_page_links():
     html = render_workspace_page(
         runs=[
             {
+                "run_id": "run-001",
                 "title": "March refresh",
                 "status": "success",
                 "created_at": "2026-03-17 21:00",
                 "source_name": "march.csv",
                 "summary": "Healthy refresh",
-                "href": "/runs/march-refresh",
-            },
-            {
-                "title": "Previous import",
-                "status": "failed",
-                "created_at": "2026-03-16 08:30",
-                "source_name": "april.csv",
-                "summary": "Retry needed",
-                "href": "/runs/previous-import",
-            },
-        ]
-    )
-
-    assert "Historical runs" in html
-    assert "March refresh" in html
-    assert "Previous import" in html
-    assert "运行总数" in html
-    assert "最近成功" in html
-    assert "待处理" in html
-
-
-def test_render_detail_page_includes_three_panels_and_quick_actions():
-    html = render_detail_page(
-        {
-            "title": "Run 2026-03-18",
-            "status": "completed",
-            "created_at": "2026-03-18 09:12",
-            "source_name": "sample_comments.csv",
+                "href": "/workspace/run-001",
+            }
+        ],
+        selected_run={
+            "run_id": "run-001",
+            "title": "March refresh",
+            "status": "success",
+            "source_name": "march.csv",
+            "summary": "Healthy refresh",
         },
-        derived_tables=[
+        tables=[
             {
                 "title": "Sentiment summary",
                 "summary": "Derived table preview",
-                "columns": ["label", "count"],
-                "rows": [
-                    {"label": "positive", "count": 42},
-                    {"label": "neutral", "count": 18},
-                ],
-                "open_url": "/runs/test/artifacts/tables/0",
-            }
-        ],
-        logs=[
-            {
-                "title": "Pipeline summary",
-                "message": "step 2 completed",
-                "open_url": "/runs/test/artifacts/logs/0",
-            }
-        ],
-        charts=[
-            {
-                "type": "line",
-                "title": "Demand over time",
-                "summary": "Chart preview placeholder",
-                "open_url": "/chart/1234",
+                "status": "ready",
+                "preview": {
+                    "columns": ["label", "count"],
+                    "rows": [{"label": "positive", "count": "42"}],
+                },
+                "open_url": "/runs/run-001/artifacts/tables/0",
+                "download_url": "/runs/run-001/artifacts/tables/0?download=true",
             }
         ],
     )
 
-    assert "Panel 01" in html
-    assert "派生表格" in html
-    assert "Panel 02" in html
-    assert "日志" in html
-    assert "Panel 03" in html
-    assert "图表" in html
-    assert "预览" in html
-    assert "快捷入口" in html
-    assert "打开表格导出" in html
-    assert "复制日志" in html
-    assert "打开图表页面" in html
-    assert "/chart/1234" in html
+    assert "表格工作台" in html
+    assert "table-grid" in html
+    assert "/dashboard/run-001" in html
+    assert "/insights/run-001" in html
+
+
+def test_render_dashboard_page_contains_iframe_and_missing_reason():
+    html = render_dashboard_page(
+        {"run_id": "run-002", "title": "Run 002"},
+        charts=[
+            {
+                "title": "Sentiment donut",
+                "summary": "Chart ready",
+                "status": "ready",
+                "open_url": "/runs/run-002/artifacts/charts/0",
+                "download_url": "/runs/run-002/artifacts/charts/0?download=true",
+            },
+            {
+                "title": "Demand network",
+                "summary": "Chart missing",
+                "status": "missing",
+                "reason": "数据不足或该图表在当前数据条件下被跳过。",
+                "open_url": "",
+                "download_url": "",
+            },
+        ],
+    )
+
+    assert "Dashboard" in html
+    assert "chart-iframe" in html
+    assert "数据不足或该图表在当前数据条件下被跳过。" in html
+
+
+def test_render_insights_page_contains_manual_trigger_controls():
+    html = render_insights_page(
+        {"run_id": "run-003", "title": "Run 003"},
+        insight_markdown="## 建议\\n- 提升物流稳定性",
+        insight_status="generated",
+    )
+
+    assert "DeepSeek API Key" in html
+    assert "生成建议" in html
+    assert "/api/session/deepseek-key" in html
+    assert "/api/runs/${runId}/insights/generate" in html
+
+
+def test_render_legacy_page_keeps_parallel_entry():
+    html = render_legacy_page(
+        runs=[
+            {
+                "run_id": "run-004",
+                "title": "Run 004",
+                "status": "completed",
+                "source_name": "legacy.csv",
+                "summary": "legacy summary",
+                "href": "/workspace/run-004",
+            }
+        ]
+    )
+
+    assert "旧版入口" in html
+    assert "/runs/run-004" in html
 
 
 def test_crawler_guidance_cards_are_static_and_complete():
@@ -126,7 +141,6 @@ def test_crawler_guidance_cards_are_static_and_complete():
     assert "exp1_bilibili_requests.py" in html
     assert "exp2_jd_reviews_connect.py" in html
     assert "start_chrome.ps1" in html
-    assert "说明型入口，不直接在网页内执行脚本" in html
 
 
 def test_chart_template_is_left_intact():

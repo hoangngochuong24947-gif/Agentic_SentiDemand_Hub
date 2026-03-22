@@ -67,7 +67,7 @@ class TestVisualizationGallery:
         app = create_app(settings=settings)
         assert app.title == "SentiDemand Visualization Gallery"
 
-    def test_workspace_and_manifest_routes_use_run_registry(self, tmp_path: Path):
+    def test_routes_use_new_information_architecture(self, tmp_path: Path):
         settings = Settings(
             paths=PathConfig(
                 output_base=tmp_path / "outputs",
@@ -80,6 +80,13 @@ class TestVisualizationGallery:
         if not fastapi_available:
             pytest.skip("fastapi is required for route tests")
 
+        run_id = "demo-run"
+        run_dir = settings.paths.output_base / "workspace_runs" / run_id
+        charts_dir = run_dir / "charts"
+        charts_dir.mkdir(parents=True, exist_ok=True)
+        chart_file = charts_dir / "sentiment_donut_101010.html"
+        chart_file.write_text("<html><body>chart</body></html>", encoding="utf-8")
+
         run_registry = settings.paths.get_visualization_path() / "run_registry.json"
         run_registry.parent.mkdir(parents=True, exist_ok=True)
         run_registry.write_text(
@@ -88,15 +95,30 @@ class TestVisualizationGallery:
                     "version": "1.0",
                     "runs": [
                         {
-                            "run_id": "demo-run",
+                            "run_id": run_id,
                             "source_file": "sample_comments.csv",
                             "created_at": "2026-03-18T09:12:00",
                             "status": "completed",
                             "derived_tables": [],
                             "logs": [],
-                            "charts": [],
-                            "user_message": "上传成功，已生成派生表格、日志和图表。",
-                            "summary": {"chart_count": 0},
+                            "charts": [
+                                {
+                                    "type": "chart",
+                                    "name": "sentiment_donut",
+                                    "title": "Sentiment donut",
+                                    "summary": "Chart ready",
+                                    "status": "ready",
+                                    "reason": "",
+                                    "path": str(chart_file),
+                                    "downloadable": True,
+                                }
+                            ],
+                            "chart_failures": ["demand_network"],
+                            "insight_status": "not_generated",
+                            "insight_updated_at": "",
+                            "insights": [],
+                            "user_message": "上传成功，分析完成。",
+                            "summary": {"chart_count": 1, "saved_file_count": 0, "log_file_count": 0},
                         }
                     ],
                 },
@@ -112,24 +134,34 @@ class TestVisualizationGallery:
 
         home = client.get("/")
         assert home.status_code == 200
-        assert "选择评论文件" in home.text
+        assert "上传并分析" in home.text
         assert "sample_comments.csv" in home.text
 
         workspace = client.get("/workspace")
         assert workspace.status_code == 200
-        assert "历史文件与分析运行工作台" in workspace.text
-        assert "sample_comments.csv" in workspace.text
+        assert "表格工作台" in workspace.text
+
+        workspace_run = client.get(f"/workspace/{run_id}")
+        assert workspace_run.status_code == 200
+        assert "sample_comments.csv" in workspace_run.text
+
+        dashboard = client.get(f"/dashboard/{run_id}")
+        assert dashboard.status_code == 200
+        assert "chart-iframe" in dashboard.text
+
+        insights = client.get(f"/insights/{run_id}")
+        assert insights.status_code == 200
+        assert "DeepSeek API Key" in insights.text
+
+        legacy = client.get("/legacy")
+        assert legacy.status_code == 200
+        assert "旧版入口" in legacy.text
 
         manifest = client.get("/api/manifest")
         assert manifest.status_code == 200
         payload = manifest.json()
-        assert payload["version"] == "2.0"
+        assert payload["version"] == "3.0"
         assert payload["total_runs"] == 1
-        assert payload["runs"][0]["run_id"] == "demo-run"
-
-        detail = client.get("/api/runs/demo-run")
-        assert detail.status_code == 200
-        assert detail.json()["source_file"] == "sample_comments.csv"
 
     def test_upload_failure_reports_category(self, tmp_path: Path, monkeypatch):
         settings = Settings(
@@ -155,18 +187,13 @@ class TestVisualizationGallery:
 
         from fastapi.testclient import TestClient
 
-        app = create_app(settings=settings)
-        client = TestClient(app)
-
-        response = client.post(
-            "/upload",
-            files={"file": ("bad.csv", b"\xff", "text/csv")},
-        )
+        client = TestClient(create_app(settings=settings))
+        response = client.post("/upload", files={"file": ("bad.csv", b"\xff", "text/csv")})
 
         assert response.status_code == 422
         assert "UTF-8" in response.json()["detail"]
 
-    def test_upload_success_registers_run_and_artifacts(self, tmp_path: Path, monkeypatch):
+    def test_upload_success_registers_run_and_chart_audit(self, tmp_path: Path, monkeypatch):
         settings = Settings(
             paths=PathConfig(
                 output_base=tmp_path / "outputs",
@@ -217,24 +244,6 @@ class TestVisualizationGallery:
                 chart_dir.mkdir(parents=True, exist_ok=True)
                 chart_path = chart_dir / "sentiment_donut_101010.html"
                 chart_path.write_text("<html><body>chart</body></html>", encoding="utf-8")
-                manifest = {
-                    "version": "1.0",
-                    "entries": [
-                        {
-                            "id": "chart1234",
-                            "run_id": run_id or self.run_id,
-                            "source_file": source_name,
-                            "chart_type": "sentiment_donut",
-                            "chart_title": "Sentiment donut",
-                            "output_path": str(chart_path.relative_to(self.settings.paths.get_visualization_path())).replace("\\", "/"),
-                            "created_at": "2026-03-18T10:10:10",
-                        }
-                    ],
-                }
-                (self.settings.paths.get_visualization_path() / "manifest.json").write_text(
-                    json.dumps(manifest, ensure_ascii=False, indent=2),
-                    encoding="utf-8",
-                )
                 return [str(chart_path)]
 
         class FakePipeline:
@@ -252,10 +261,7 @@ class TestVisualizationGallery:
         from fastapi.testclient import TestClient
 
         client = TestClient(create_app(settings=settings))
-        response = client.post(
-            "/upload",
-            files={"file": ("comments.csv", b"comment\nhello\n", "text/csv")},
-        )
+        response = client.post("/upload", files={"file": ("comments.csv", b"comment\nhello\n", "text/csv")})
 
         assert response.status_code == 200
         payload = response.json()
@@ -263,17 +269,78 @@ class TestVisualizationGallery:
         assert payload["artifacts"]["derived_tables"] == 1
         assert payload["artifacts"]["logs"] >= 1
         assert payload["artifacts"]["charts"] == 1
-        assert "CSV" in " ".join(payload["how_to_upload"])
+        assert payload["artifacts"]["missing_charts"] >= 1
 
-        manifest = client.get("/api/runs/run123")
-        assert manifest.status_code == 200
-        run_payload = manifest.json()
+        run_payload = client.get("/api/runs/run123").json()
         assert run_payload["source_file"].endswith("comments.csv")
         assert len(run_payload["derived_tables"]) == 1
-        assert len(run_payload["charts"]) == 1
+        assert len(run_payload["charts"]) >= 1
+        assert "chart_failures" in run_payload
+        assert run_payload["summary"]["chart_count"] == 1
 
-        detail_page = client.get("/runs/run123")
-        assert detail_page.status_code == 200
-        assert "派生表格" in detail_page.text
-        assert "日志" in detail_page.text
-        assert "图表" in detail_page.text
+    def test_deepseek_session_and_insight_generation(self, tmp_path: Path, monkeypatch):
+        settings = Settings(
+            paths=PathConfig(
+                output_base=tmp_path / "outputs",
+                visualization_base=tmp_path / "vis_outputs",
+                upload_dir=tmp_path / "uploads",
+            )
+        )
+
+        fastapi_available = importlib.util.find_spec("fastapi") is not None
+        if not fastapi_available:
+            pytest.skip("fastapi is required for API tests")
+
+        run_id = "insight-run"
+        run_registry = settings.paths.get_visualization_path() / "run_registry.json"
+        run_registry.parent.mkdir(parents=True, exist_ok=True)
+        run_registry.write_text(
+            json.dumps(
+                {
+                    "version": "1.0",
+                    "runs": [
+                        {
+                            "run_id": run_id,
+                            "source_file": "insight.csv",
+                            "created_at": "2026-03-18T09:12:00",
+                            "status": "completed",
+                            "derived_tables": [],
+                            "logs": [],
+                            "charts": [],
+                            "chart_failures": [],
+                            "insight_status": "not_generated",
+                            "insight_updated_at": "",
+                            "insights": [],
+                            "summary": {"chart_count": 0, "saved_file_count": 0, "log_file_count": 0},
+                        }
+                    ],
+                },
+                ensure_ascii=False,
+                indent=2,
+            ),
+            encoding="utf-8",
+        )
+
+        monkeypatch.setattr(
+            gallery,
+            "_call_deepseek",
+            lambda api_key, prompt: {"response": {"id": "mock"}, "content": "## 建议\n- 优先优化物流稳定性"},
+        )
+
+        from fastapi.testclient import TestClient
+
+        client = TestClient(create_app(settings=settings))
+
+        key_resp = client.post("/api/session/deepseek-key", json={"api_key": "sk-test-deepseek-123456789"})
+        assert key_resp.status_code == 200
+        session_id = key_resp.json()["session_id"]
+
+        insight_resp = client.post(f"/api/runs/{run_id}/insights/generate", json={"session_id": session_id})
+        assert insight_resp.status_code == 200
+        payload = insight_resp.json()
+        assert payload["insight_status"] == "generated"
+        assert "物流稳定性" in payload["advice_markdown"]
+
+        run_payload = client.get(f"/api/runs/{run_id}").json()
+        assert run_payload["insight_status"] == "generated"
+        assert len(run_payload["insights"]) == 2
