@@ -31,6 +31,7 @@ from comment_analyzer.topic.keywords import KeywordExtractor
 from comment_analyzer.topic.lda import LDAModel
 from comment_analyzer.demand.intensity import DemandIntensityCalculator
 from comment_analyzer.demand.correlation import DemandCorrelationAnalyzer
+from comment_analyzer.insights.briefing import BriefingPack, InsightBriefingBuilder
 
 
 @dataclass
@@ -69,6 +70,7 @@ class PipelineResults:
     saved_files: List[SavedFileInfo] = field(default_factory=list)
     start_time: Optional[datetime] = None
     end_time: Optional[datetime] = None
+    ai_briefing: Optional[BriefingPack] = None
 
     def __post_init__(self):
         """Initialize managers if not provided."""
@@ -145,6 +147,9 @@ class PipelineResults:
         # Save demand analysis results
         self._save_demand_results()
 
+        # Save AI briefing package for downstream LLM execution
+        self._save_ai_briefing()
+
         # Log important summary information
         self._log_summary()
 
@@ -172,6 +177,12 @@ class PipelineResults:
         from comment_analyzer.visualization.generator import VisualizationGenerator
         gen = VisualizationGenerator(self.settings, self)
         return gen.generate_all(source_name)
+
+    def build_ai_briefing(self, source_name: str = "analysis") -> BriefingPack:
+        """Build and cache an AI prompt package for this result set."""
+        if self.ai_briefing is None:
+            self.ai_briefing = InsightBriefingBuilder().build(self, source_name=source_name)
+        return self.ai_briefing
 
     def _save_processed_data(self) -> None:
         """Save processed data with derived columns."""
@@ -328,6 +339,17 @@ class PipelineResults:
                 }
             )
 
+    def _save_ai_briefing(self) -> None:
+        """Save the AI prompt package as JSON for external LLM execution."""
+        briefing = self.build_ai_briefing()
+        info = self.output_manager.save_json(
+            briefing.to_dict(),
+            "ai_briefing.json",
+            category="derived",
+            use_sequence=True,
+        )
+        self.saved_files.append(info)
+
     def _log_summary(self) -> None:
         """Log important summary information."""
         duration = None
@@ -419,6 +441,7 @@ to generating insights. It uses a configuration-driven approach for
             log_manager: Optional LogManager instance
         """
         # Use settings if provided, otherwise convert from config, or use defaults
+        self.config = config or Config()
         if settings is not None:
             self.settings = settings
         elif config is not None:
@@ -719,22 +742,53 @@ to generating insights. It uses a configuration-driven approach for
             print("  Cleaning text...")
         tqdm.pandas(disable=not verbose)
         df['cleaned_text'] = df[text_column].astype(str).progress_apply(self.cleaner.clean)
+        df['normalized_text'] = df['cleaned_text'].progress_apply(self.cleaner.normalize_chinese_punctuation)
+        df['analysis_text'] = df['normalized_text'].progress_apply(self.cleaner.remove_punctuation)
 
         # Segmentation
         if verbose:
             print("  Segmenting text...")
-        df['segmented_text'] = df['cleaned_text'].progress_apply(self.segmenter.segment)
+        df['segmented_text'] = df['analysis_text'].progress_apply(self.segmenter.segment)
 
         # Stopword filtering
         if verbose:
             print("  Filtering stopwords...")
         df['filtered_text'] = df['segmented_text'].progress_apply(self.stopword_filter.filter)
+        df['filtered_text'] = df['filtered_text'].progress_apply(self._filter_noise_tokens)
 
         # Create space-joined version for vectorization
         df['processed_text'] = df['filtered_text'].apply(lambda x: ' '.join(x))
 
         logger.debug(f"Preprocessing complete: {len(df)} documents processed")
         return df
+
+    @staticmethod
+    def _filter_noise_tokens(tokens: List[str]) -> List[str]:
+        """Remove punctuation and malformed tokens missed by upstream cleaning."""
+        filtered: List[str] = []
+        punctuation_tokens = {
+            ",", ".", "!", "?", ";", ":", "-", "_", "/", "\\", "|",
+            "，", "。", "！", "？", "；", "：", "、", "…", "—", "（", "）",
+            "(", ")", "[", "]", "{", "}", "<", ">", '"', "'", "“", "”", "‘", "’",
+        }
+        for token in tokens:
+            if not token:
+                continue
+            normalized = str(token).strip().lower()
+            if not normalized:
+                continue
+            if normalized in punctuation_tokens:
+                continue
+            if re.fullmatch(r"[\W_]+", normalized, flags=re.UNICODE):
+                continue
+            if re.fullmatch(r"\d+(?:\.\d+)?", normalized):
+                continue
+            if "�" in normalized:
+                continue
+            if len(normalized) == 1 and not re.search(r"[\u4e00-\u9fffA-Za-z]", normalized):
+                continue
+            filtered.append(token)
+        return filtered
 
     def _run_sentiment_analysis(
         self,

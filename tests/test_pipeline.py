@@ -77,7 +77,8 @@ class TestPipelineResults:
         )
         output_dir = tmp_path / "output"
         results.save(output_dir)
-        assert (output_dir / "processed_data.csv").exists()
+        assert (output_dir / "derived_columns" / "001_processed_data.csv").exists()
+        assert (output_dir / "derived_columns" / "002_ai_briefing.json").exists()
 
 
 class TestCommentPipeline:
@@ -142,3 +143,25 @@ class TestCommentPipeline:
         pipeline = CommentPipeline()
         with pytest.raises(FileNotFoundError):
             pipeline.load_data("nonexistent.csv")
+
+    def test_preprocessing_filters_punctuation_tokens(self):
+        pipeline = CommentPipeline()
+        df = pd.DataFrame({
+            "comment": ["很好，真的很好！！！, ,", "包装不错，，物流很快。。。", "味道一般，但服务可以"] * 4,
+        })
+        results = pipeline.run(df, text_column="comment", verbose=False)
+        flattened = [token for row in results.processed_data["filtered_text"] for token in row]
+        assert "," not in flattened
+        assert "，" not in flattened
+        assert "。" not in flattened
+
+    def test_build_ai_briefing(self):
+        pipeline = CommentPipeline()
+        df = pd.DataFrame({
+            "comment": ["产品做工很好，包装也不错", "物流偏慢，希望快一点", "整体满意，但希望价格更稳"] * 4,
+        })
+        results = pipeline.run(df, text_column="comment", verbose=False)
+        briefing = results.build_ai_briefing(source_name="unit_test")
+        assert briefing.payload["source_name"] == "unit_test"
+        assert "评论洞察分析师" in briefing.system_prompt
+        assert "sentiment_distribution" in briefing.payload

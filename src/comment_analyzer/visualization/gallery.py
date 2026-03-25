@@ -115,7 +115,9 @@ def _build_index_html(settings: Settings, entries: List[Dict[str, Any]]) -> str:
         sections.append(
             """
             <section class="empty">
-              暂无可视化记录。请先运行 Pipeline 并调用 results.visualize(source_name="...")。
+              <div class="empty-kicker">No Signal Yet</div>
+              <div class="empty-title">这里还没有形成可阅读的洞察。</div>
+              <div class="empty-copy">导入一批评论后，系统会在这里生成图表、证据线索与可直接汇报的分析资产。</div>
             </section>
             """
         )
@@ -125,48 +127,96 @@ def _build_index_html(settings: Settings, entries: List[Dict[str, Any]]) -> str:
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>SentiDemand Visualization Gallery</title>
+  <title>SentiDemand Desk</title>
   <style>
     :root {{
-      --bg:#0a0e1a; --card:#142033; --border:#334155; --text:#e2e8f0; --muted:#94a3b8; --accent:#3b82f6;
+      --bg:#07111f; --bg-soft:#0f1a2d; --card:#132237; --card-strong:#182a44;
+      --border:rgba(148,163,184,.18); --text:#ecf3fb; --muted:#8ea3bb; --accent:#4ea1ff;
+      --accent-soft:rgba(78,161,255,.16); --success:#19c37d;
     }}
     * {{ box-sizing: border-box; }}
-    body {{ margin:0; font-family: "Segoe UI", "PingFang SC", sans-serif; background: var(--bg); color: var(--text); }}
-    .wrap {{ max-width: 1200px; margin: 0 auto; padding: 24px; }}
-    h1 {{ margin: 0 0 8px; font-size: 1.8rem; }}
-    .sub {{ color: var(--muted); margin-bottom: 20px; }}
-    .actions {{ display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 22px; }}
-    button {{
-      border: 1px solid var(--border); background: #1e293b; color: var(--text);
-      border-radius: 8px; padding: 8px 12px; cursor: pointer;
+    body {{
+      margin:0; font-family: "Segoe UI", "PingFang SC", sans-serif; color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(78,161,255,.14), transparent 32%),
+        radial-gradient(circle at 85% 15%, rgba(25,195,125,.10), transparent 20%),
+        linear-gradient(180deg, #07111f 0%, #091423 42%, #0b1626 100%);
     }}
-    button:hover {{ border-color: var(--accent); }}
+    .wrap {{ max-width: 1260px; margin: 0 auto; padding: 32px 24px 56px; }}
+    .hero {{
+      padding: 28px; border: 1px solid var(--border); border-radius: 24px; margin-bottom: 24px;
+      background: linear-gradient(180deg, rgba(24,42,68,.78), rgba(11,22,38,.92));
+      box-shadow: 0 22px 48px rgba(0,0,0,.26);
+    }}
+    .eyebrow {{
+      display:inline-flex; align-items:center; gap:8px; padding:6px 10px; border-radius:999px;
+      background: var(--accent-soft); color:#cfe6ff; font-size:.8rem; letter-spacing:.04em;
+      text-transform:uppercase; margin-bottom:16px;
+    }}
+    h1 {{ margin: 0 0 10px; font-size: 2.3rem; letter-spacing: -.03em; }}
+    .sub {{ color: var(--muted); margin: 0; max-width: 760px; line-height: 1.7; }}
+    .hero-meta {{ display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-top: 22px; }}
+    .meta-card {{
+      padding: 14px 16px; border: 1px solid var(--border); border-radius: 16px; background: rgba(10,19,33,.45);
+    }}
+    .meta-label {{ color: var(--muted); font-size: .8rem; margin-bottom: 6px; text-transform: uppercase; letter-spacing: .04em; }}
+    .meta-value {{ color: var(--text); font-size: 1rem; line-height: 1.5; }}
+    .actions {{ display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 22px; align-items: center; }}
+    button {{
+      border: 1px solid var(--border); background: rgba(19,34,55,.9); color: var(--text);
+      border-radius: 999px; padding: 10px 16px; cursor: pointer; font-weight: 600;
+    }}
+    button:hover {{ border-color: var(--accent); background: rgba(24,42,68,.95); }}
+    .primary {{
+      background: linear-gradient(135deg, #3b82f6, #2563eb); border-color: transparent;
+    }}
     #upload-status {{ color: var(--muted); font-size: .92rem; }}
     .group {{ margin-bottom: 28px; }}
-    .group h2 {{ margin: 0 0 12px; font-size: 1.15rem; color: #bfdbfe; }}
+    .group h2 {{ margin: 0 0 12px; font-size: 1.15rem; color: #d8e9ff; letter-spacing: -.02em; }}
     .grid {{ display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }}
     .card {{
       display: block; text-decoration: none; color: inherit;
-      border: 1px solid var(--border); border-radius: 12px; padding: 12px;
-      background: linear-gradient(180deg, rgba(51,65,85,.35), rgba(20,32,51,.8));
+      border: 1px solid var(--border); border-radius: 18px; padding: 16px;
+      background: linear-gradient(180deg, rgba(24,42,68,.75), rgba(15,26,45,.95));
     }}
-    .card:hover {{ border-color: var(--accent); transform: translateY(-1px); transition: .15s; }}
-    .card-title {{ font-weight: 600; margin-bottom: 6px; }}
+    .card:hover {{ border-color: var(--accent); transform: translateY(-1px); transition: .15s; box-shadow: 0 18px 30px rgba(0,0,0,.18); }}
+    .card-title {{ font-weight: 700; margin-bottom: 8px; line-height: 1.4; }}
     .card-meta, .card-time {{ color: var(--muted); font-size: .86rem; }}
     .empty {{
-      border: 1px dashed var(--border); border-radius: 12px; padding: 16px; color: var(--muted);
+      border: 1px dashed var(--border); border-radius: 20px; padding: 24px; color: var(--muted);
+      background: rgba(10,19,33,.36);
     }}
+    .empty-kicker {{ text-transform: uppercase; letter-spacing: .08em; font-size: .78rem; color: #cfe6ff; margin-bottom: 10px; }}
+    .empty-title {{ font-size: 1.2rem; color: var(--text); margin-bottom: 8px; }}
+    .empty-copy {{ line-height: 1.7; max-width: 680px; }}
     .footer {{ margin-top: 24px; color: var(--muted); font-size: .85rem; }}
   </style>
 </head>
 <body>
   <main class="wrap">
-    <h1>SentiDemand Hub · 可视化画廊</h1>
-    <p class="sub">输出目录：{html.escape(str(settings.paths.get_visualization_path()))}</p>
+    <section class="hero">
+      <div class="eyebrow">SentiDemand Desk</div>
+      <h1>把评论，变成可执行的判断</h1>
+      <p class="sub">从情绪、主题与需求信号中，提炼产品机会、风险预警与下一步动作。这里不只是图表仓库，而是每一次评论分析的决策入口。</p>
+      <div class="hero-meta">
+        <div class="meta-card">
+          <div class="meta-label">Workspace</div>
+          <div class="meta-value">{html.escape(str(settings.paths.get_visualization_path()))}</div>
+        </div>
+        <div class="meta-card">
+          <div class="meta-label">What You Get</div>
+          <div class="meta-value">Charts, AI briefing package, and evidence-ready artifacts</div>
+        </div>
+        <div class="meta-card">
+          <div class="meta-label">Best For</div>
+          <div class="meta-value">产品复盘、用户洞察、管理层摘要</div>
+        </div>
+      </div>
+    </section>
 
     <div class="actions">
-      <button onclick="location.reload()">刷新画廊</button>
-      <button onclick="document.getElementById('upload').click()">上传并分析</button>
+      <button onclick="location.reload()">刷新当前洞察</button>
+      <button class="primary" onclick="document.getElementById('upload').click()">导入评论数据</button>
       <input id="upload" type="file" accept=".csv,.xlsx,.xls,.json" hidden />
       <span id="upload-status"></span>
     </div>
@@ -181,17 +231,17 @@ def _build_index_html(settings: Settings, entries: List[Dict[str, Any]]) -> str:
     uploadInput.addEventListener('change', async () => {{
       if (!uploadInput.files.length) return;
       const file = uploadInput.files[0];
-      statusNode.textContent = `正在上传并分析: ${{file.name}} ...`;
+      statusNode.textContent = `已接收 ${{file.name}}，正在检查结构并提炼洞察...`;
       const form = new FormData();
       form.append('file', file);
       try {{
         const res = await fetch('/upload', {{ method: 'POST', body: form }});
         const data = await res.json();
         if (!res.ok) throw new Error(data.detail || 'upload failed');
-        statusNode.textContent = `完成：生成 ${{data.charts_generated}} 张图`;
+        statusNode.textContent = `分析完成：已生成 ${{data.charts_generated}} 张图表，并同步产出 AI briefing 包。`;
         setTimeout(() => location.reload(), 800);
       }} catch (err) {{
-        statusNode.textContent = `失败：${{err.message}}`;
+        statusNode.textContent = `本次导入未完成：${{err.message}}`;
       }}
     }});
   </script>
@@ -259,6 +309,7 @@ def create_app(settings: Optional[Settings] = None) -> Any:
             df = pipeline.load_data(target)
             results = pipeline.run(df, verbose=False)
             generated = results.visualize(source_name=target.stem)
+            briefing = results.build_ai_briefing(source_name=target.stem)
         except Exception as exc:
             logger.exception("Failed to process uploaded file")
             raise HTTPException(status_code=500, detail=f"Processing failed: {exc}") from exc
@@ -268,6 +319,10 @@ def create_app(settings: Optional[Settings] = None) -> Any:
                 "uploaded_file": target.name,
                 "charts_generated": len(generated),
                 "generated_files": generated,
+                "ai_briefing_preview": {
+                    "source_name": briefing.payload.get("source_name"),
+                    "keywords": briefing.payload.get("top_keywords", [])[:5],
+                },
             }
         )
 
