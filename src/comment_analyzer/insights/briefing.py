@@ -163,6 +163,7 @@ JSON 字段如下：
             demand_correlation = demand_correlation[:12]
 
         representative_quotes = self._collect_quotes(results)
+        profile_analysis = getattr(results, "profile_analysis", None) or {}
 
         return {
             "source_name": source_name,
@@ -180,6 +181,8 @@ JSON 字段如下：
             "demand_intensity": demand_intensity,
             "demand_correlation": demand_correlation,
             "representative_quotes": representative_quotes,
+            "analysis_strategy": getattr(results, "analysis_strategy", "generic"),
+            "profile_analysis": profile_analysis,
         }
 
     def _build_user_prompt(self, payload: Dict[str, Any]) -> str:
@@ -192,6 +195,8 @@ JSON 字段如下：
             f"[需求强度]\n{payload['demand_intensity']}\n\n"
             f"[共现关系]\n{payload['demand_correlation']}\n\n"
             f"[代表性评论]\n{payload['representative_quotes']}\n"
+            f"\n[分析策略]\n{payload['analysis_strategy']}\n\n"
+            f"[画像分析]\n{payload['profile_analysis']}\n"
         )
 
     def _collect_quotes(self, results: "PipelineResults") -> Dict[str, List[str]]:

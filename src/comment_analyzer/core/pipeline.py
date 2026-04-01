@@ -6,8 +6,10 @@ the entire analysis workflow from data loading to result generation.
 
 from __future__ import annotations
 
+import asyncio
 import re
 import time
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
@@ -32,6 +34,8 @@ from comment_analyzer.topic.lda import LDAModel
 from comment_analyzer.demand.intensity import DemandIntensityCalculator
 from comment_analyzer.demand.correlation import DemandCorrelationAnalyzer
 from comment_analyzer.insights.briefing import BriefingPack, InsightBriefingBuilder
+from comment_analyzer.insights.profile import DemographicProfileAnalyzer
+from comment_analyzer.insights.progress import ProgressMessageCenter
 
 
 @dataclass
@@ -71,6 +75,9 @@ class PipelineResults:
     start_time: Optional[datetime] = None
     end_time: Optional[datetime] = None
     ai_briefing: Optional[BriefingPack] = None
+    analysis_strategy: str = "generic"
+    profile_analysis: Optional[Dict[str, Any]] = None
+    progress_messages: List[Dict[str, str]] = field(default_factory=list)
 
     def __post_init__(self):
         """Initialize managers if not provided."""
@@ -87,6 +94,7 @@ class PipelineResults:
         lines.append("Comment Analysis Summary")
         lines.append("=" * 50)
         lines.append(f"\nTotal comments: {len(self.original_data)}")
+        lines.append(f"Analysis strategy: {self.analysis_strategy}")
 
         if self.sentiment_distribution:
             lines.append("\n--- Sentiment Distribution ---")
@@ -111,6 +119,16 @@ class PipelineResults:
             for col in self.demand_intensity.columns:
                 avg = self.demand_intensity[col].mean()
                 lines.append(f"  {col}: {avg:.4f}")
+
+        if self.profile_analysis and self.profile_analysis.get("detected_dimensions"):
+            dims = ", ".join(self.profile_analysis["detected_dimensions"])
+            lines.append("\n--- Profile Analysis ---")
+            lines.append(f"  Dimensions: {dims}")
+            for insight in self.profile_analysis.get("segment_insights", [])[:3]:
+                lines.append(
+                    f"  {insight.get('segment', 'segment')}: "
+                    f"{insight.get('dominant_sentiment', 'unknown')}"
+                )
 
         if self.saved_files:
             lines.append(f"\n--- Saved Files ({len(self.saved_files)} total) ---")
@@ -146,6 +164,9 @@ class PipelineResults:
 
         # Save demand analysis results
         self._save_demand_results()
+
+        # Save profile-enhanced analysis payloads
+        self._save_profile_results()
 
         # Save AI briefing package for downstream LLM execution
         self._save_ai_briefing()
@@ -350,6 +371,26 @@ class PipelineResults:
         )
         self.saved_files.append(info)
 
+    def _save_profile_results(self) -> None:
+        """Persist profile-aware analysis payloads and progress copy."""
+        if self.profile_analysis is not None:
+            info = self.output_manager.save_json(
+                self.profile_analysis,
+                "profile_analysis.json",
+                category="derived",
+                use_sequence=True,
+            )
+            self.saved_files.append(info)
+
+        if self.progress_messages:
+            info = self.output_manager.save_json(
+                {"messages": self.progress_messages},
+                "progress_messages.json",
+                category="derived",
+                use_sequence=True,
+            )
+            self.saved_files.append(info)
+
     def _log_summary(self) -> None:
         """Log important summary information."""
         duration = None
@@ -525,6 +566,8 @@ to generating insights. It uses a configuration-driven approach for
             min_cooccurrence=self.settings.demand.correlation.min_cooccurrence,
             window_size=self.settings.demand.correlation.window_size,
         )
+        self.profile_analyzer = DemographicProfileAnalyzer()
+        self.progress_message_center = ProgressMessageCenter()
 
     def load_data(
         self,
@@ -659,6 +702,24 @@ to generating insights. It uses a configuration-driven approach for
         Returns:
             PipelineResults containing all analysis results.
         """
+        try:
+            asyncio.get_running_loop()
+        except RuntimeError:
+            return asyncio.run(self.run_async(df, text_column=text_column, verbose=verbose))
+
+        with ThreadPoolExecutor(max_workers=1) as executor:
+            future = executor.submit(
+                lambda: asyncio.run(self.run_async(df, text_column=text_column, verbose=verbose))
+            )
+            return future.result()
+
+    async def run_async(
+        self,
+        df: pd.DataFrame,
+        text_column: Optional[str] = None,
+        verbose: bool = True,
+    ) -> PipelineResults:
+        """Run the complete analysis pipeline with async orchestration."""
         start_time = datetime.now()
         original_df = df.copy()
 
@@ -679,29 +740,34 @@ to generating insights. It uses a configuration-driven approach for
             print(f"Using text column: '{text_column}'")
             print(f"Processing {len(df)} comments...")
 
+        progress_messages = self.progress_message_center.build(
+            ["preprocessing", "sentiment", "topic", "demand", "profile"]
+        )
+
         # ==================== Phase 1: Preprocessing ====================
         if verbose:
             print("\n[1/4] Preprocessing...")
+            print(f"  {progress_messages[0]['delivery_copy']}")
 
         df = self._run_preprocessing(df, text_column, verbose)
 
-        # ==================== Phase 2: Sentiment Analysis ====================
+        # ==================== Phase 2: Concurrent Analysis ====================
         if verbose:
-            print("\n[2/4] Sentiment Analysis...")
+            print("\n[2/4] Concurrent Insight Analysis...")
+            for payload in progress_messages[1:]:
+                print(f"  [{payload['label']}] {payload['delivery_copy']}")
 
-        sentiment_results = self._run_sentiment_analysis(df, verbose)
+        sentiment_task = asyncio.to_thread(self._run_sentiment_analysis, df, verbose)
+        topic_task = asyncio.to_thread(self._run_topic_modeling, df, verbose)
+        demand_task = asyncio.to_thread(self._run_demand_analysis, df, verbose)
+        profile_task = asyncio.to_thread(self._run_profile_analysis, df, verbose)
 
-        # ==================== Phase 3: Topic Modeling ====================
-        if verbose:
-            print("\n[3/4] Topic Modeling...")
-
-        topic_results = self._run_topic_modeling(df, verbose)
-
-        # ==================== Phase 4: Demand Analysis ====================
-        if verbose:
-            print("\n[4/4] Demand Analysis...")
-
-        demand_results = self._run_demand_analysis(df, verbose)
+        sentiment_results, topic_results, demand_results, profile_results = await asyncio.gather(
+            sentiment_task,
+            topic_task,
+            demand_task,
+            profile_task,
+        )
 
         end_time = datetime.now()
 
@@ -720,6 +786,9 @@ to generating insights. It uses a configuration-driven approach for
             log_manager=self.log_manager,
             start_time=start_time,
             end_time=end_time,
+            analysis_strategy=profile_results.get("strategy", "generic"),
+            profile_analysis=profile_results,
+            progress_messages=progress_messages,
         )
 
         if verbose:
@@ -766,20 +835,15 @@ to generating insights. It uses a configuration-driven approach for
     def _filter_noise_tokens(tokens: List[str]) -> List[str]:
         """Remove punctuation and malformed tokens missed by upstream cleaning."""
         filtered: List[str] = []
-        punctuation_tokens = {
-            ",", ".", "!", "?", ";", ":", "-", "_", "/", "\\", "|",
-            "，", "。", "！", "？", "；", "：", "、", "…", "—", "（", "）",
-            "(", ")", "[", "]", "{", "}", "<", ">", '"', "'", "“", "”", "‘", "’",
-        }
         for token in tokens:
             if not token:
                 continue
             normalized = str(token).strip().lower()
             if not normalized:
                 continue
-            if normalized in punctuation_tokens:
-                continue
             if re.fullmatch(r"[\W_]+", normalized, flags=re.UNICODE):
+                continue
+            if not re.search(r"[\u4e00-\u9fffA-Za-z0-9]", normalized):
                 continue
             if re.fullmatch(r"\d+(?:\.\d+)?", normalized):
                 continue
@@ -972,3 +1036,32 @@ to generating insights. It uses a configuration-driven approach for
         )
 
         return {'intensity': intensity_df, 'correlation': correlation_df}
+
+    def _run_profile_analysis(
+        self,
+        df: pd.DataFrame,
+        verbose: bool,
+    ) -> Dict[str, Any]:
+        """Run profile-aware segmented analysis when demographic fields are available."""
+        profile_df = df.copy()
+        if "sentiment" not in profile_df.columns:
+            profile_df["sentiment"] = self.sentiment_labeler.label_batch(profile_df["cleaned_text"])
+
+        report = self.profile_analyzer.analyze(profile_df).to_dict()
+
+        if verbose:
+            if report["strategy"] == "profile_enhanced":
+                dimensions = ", ".join(report["detected_dimensions"])
+                print(f"  Profile-enhanced analysis enabled with: {dimensions}")
+            else:
+                print("  No demographic fields detected, keeping generic strategy")
+
+        self.log_manager.log_important(
+            "Profile-aware analysis completed",
+            category="analysis",
+            data={
+                "strategy": report["strategy"],
+                "detected_dimensions": report["detected_dimensions"],
+            },
+        )
+        return report

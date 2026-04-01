@@ -74,3 +74,106 @@ Pipeline started
 2026-04-01 21:29:53 | INFO     | comment_analyzer.core.log_manager:log_important:151 - [IMPORTANT] [analysis] Demand analysis complete
 2026-04-01 21:29:53 | INFO     | comment_analyzer.core.pipeline:run:728 - Pipeline completed successfully
 2026-04-01 21:29:53 | INFO     | comment_analyzer.core.pipeline:__init__:463 - CommentPipeline initialized (platform: generic)
+2026-04-01 21:37:00 | INFO     | comment_analyzer.core.log_manager:configure:91 - Logging configured at level: INFO
+2026-04-01 21:37:00 | INFO     | comment_analyzer.core.pipeline:__init__:504 - CommentPipeline initialized (platform: generic)
+2026-04-01 21:37:00 | INFO     | comment_analyzer.core.log_manager:log_pipeline_start:198 - ============================================================
+Pipeline started
+2026-04-01 21:37:00 | INFO     | comment_analyzer.core.pipeline:run_async:736 - Using text column: 'comment'
+2026-04-01 21:37:00 | INFO     | comment_analyzer.core.pipeline:run_async:737 - Processing 24 comments...
+2026-04-01 21:37:01 | INFO     | comment_analyzer.core.log_manager:log_important:151 - [IMPORTANT] [analysis] Demand analysis complete
+2026-04-01 21:37:02 | INFO     | comment_analyzer.core.log_manager:log_important:151 - [IMPORTANT] [ml] Successfully trained naive_bayes
+2026-04-01 21:37:02 | INFO     | comment_analyzer.core.log_manager:log_important:151 - [IMPORTANT] [ml] Successfully trained svm
+2026-04-01 21:37:02 | INFO     | comment_analyzer.core.log_manager:log_important:151 - [IMPORTANT] [ml] Successfully trained logistic_regression
+2026-04-01 21:37:02 | INFO     | comment_analyzer.core.log_manager:log_important:151 - [IMPORTANT] [analysis] Profile-aware analysis completed
+2026-04-01 21:37:02 | INFO     | comment_analyzer.core.log_manager:log_important:151 - [IMPORTANT] [analysis] Topic modeling complete: 5 topics, 20 keywords
+2026-04-01 21:37:02 | INFO     | comment_analyzer.core.pipeline:run_async:797 - Pipeline completed successfully
+2026-04-01 21:37:02 | INFO     | comment_analyzer.core.pipeline:__init__:504 - CommentPipeline initialized (platform: generic)
+2026-04-01 21:37:02 | INFO     | comment_analyzer.core.log_manager:log_pipeline_start:198 - ============================================================
+Pipeline started
+2026-04-01 21:37:02 | INFO     | comment_analyzer.core.pipeline:run_async:736 - Using text column: 'comment'
+2026-04-01 21:37:02 | INFO     | comment_analyzer.core.pipeline:run_async:737 - Processing 12 comments...
+2026-04-01 21:37:03 | INFO     | comment_analyzer.core.log_manager:log_important:151 - [IMPORTANT] [analysis] Profile-aware analysis completed
+2026-04-01 21:37:03 | INFO     | comment_analyzer.core.log_manager:log_important:151 - [IMPORTANT] [analysis] Demand analysis complete
+2026-04-01 21:37:03 | INFO     | comment_analyzer.core.log_manager:log_important:151 - [IMPORTANT] [ml] Successfully trained naive_bayes
+2026-04-01 21:37:03 | ERROR    | comment_analyzer.core.pipeline:_run_sentiment_analysis:912 - Failed to train svm: This solver needs samples of at least 2 classes in the data, but the data contains only one class: 'positive'
+2026-04-01 21:37:03 | ERROR    | comment_analyzer.core.log_manager:log_error:265 - Error [ml]: This solver needs samples of at least 2 classes in the data, but the data contains only one class: 'positive'
+2026-04-01 21:37:03 | ERROR    | comment_analyzer.core.pipeline:_run_sentiment_analysis:912 - Failed to train logistic_regression: This solver needs samples of at least 2 classes in the data, but the data contains only one class: 'positive'
+2026-04-01 21:37:03 | ERROR    | comment_analyzer.core.log_manager:log_error:265 - Error [ml]: This solver needs samples of at least 2 classes in the data, but the data contains only one class: 'positive'
+2026-04-01 21:37:03 | INFO     | comment_analyzer.core.log_manager:log_important:151 - [IMPORTANT] [analysis] Topic modeling complete: 5 topics, 11 keywords
+2026-04-01 21:37:03 | INFO     | comment_analyzer.core.pipeline:run_async:797 - Pipeline completed successfully
+2026-04-01 21:37:03 | INFO     | comment_analyzer.core.pipeline:__init__:504 - CommentPipeline initialized (platform: generic)
+2026-04-01 21:37:03 | INFO     | comment_analyzer.core.log_manager:log_pipeline_start:198 - ============================================================
+Pipeline started
+2026-04-01 21:37:03 | INFO     | comment_analyzer.core.pipeline:run_async:736 - Using text column: 'comment'
+2026-04-01 21:37:03 | INFO     | comment_analyzer.core.pipeline:run_async:737 - Processing 24 comments...
+2026-04-01 21:37:03 | INFO     | comment_analyzer.core.log_manager:log_important:151 - [IMPORTANT] [analysis] Demand analysis complete
+2026-04-01 21:37:04 | INFO     | comment_analyzer.core.log_manager:log_important:151 - [IMPORTANT] [ml] Successfully trained naive_bayes
+2026-04-01 21:37:04 | INFO     | comment_analyzer.core.log_manager:log_important:151 - [IMPORTANT] [analysis] Profile-aware analysis completed
+2026-04-01 21:37:04 | INFO     | comment_analyzer.core.log_manager:log_important:151 - [IMPORTANT] [ml] Successfully trained svm
+2026-04-01 21:37:04 | INFO     | comment_analyzer.core.log_manager:log_important:151 - [IMPORTANT] [ml] Successfully trained logistic_regression
+2026-04-01 21:37:04 | INFO     | comment_analyzer.core.log_manager:log_important:151 - [IMPORTANT] [analysis] Topic modeling complete: 5 topics, 20 keywords
+2026-04-01 21:37:04 | INFO     | comment_analyzer.core.pipeline:run_async:797 - Pipeline completed successfully
+2026-04-01 21:37:04 | INFO     | comment_analyzer.core.pipeline:__init__:504 - CommentPipeline initialized (platform: generic)
+2026-04-01 21:37:04 | INFO     | comment_analyzer.core.log_manager:log_pipeline_start:198 - ============================================================
+Pipeline started
+2026-04-01 21:37:04 | INFO     | comment_analyzer.core.pipeline:run_async:736 - Using text column: 'comment'
+2026-04-01 21:37:04 | INFO     | comment_analyzer.core.pipeline:run_async:737 - Processing 24 comments...
+2026-04-01 21:37:04 | INFO     | comment_analyzer.core.pipeline:run_async:797 - Pipeline completed successfully
+2026-04-01 21:37:04 | INFO     | comment_analyzer.core.pipeline:save:154 - Starting to save pipeline results...
+2026-04-01 21:37:04 | INFO     | comment_analyzer.core.output_manager:save_dataframe:186 - Saved DataFrame: [derived] processed_data.csv -> 001_processed_data.csv
+2026-04-01 21:37:04 | INFO     | comment_analyzer.core.output_manager:save_dataframe:186 - Saved DataFrame: [sentiment] sentiment_distribution.csv -> 001_sentiment_distribution.csv
+2026-04-01 21:37:04 | INFO     | comment_analyzer.core.log_manager:log_analysis:120 - Analysis [sentiment_distribution]: 1 results
+2026-04-01 21:37:04 | INFO     | comment_analyzer.core.output_manager:save_dataframe:186 - Saved DataFrame: [word_frequency] top_keywords.csv -> 001_top_keywords.csv
+2026-04-01 21:37:04 | INFO     | comment_analyzer.core.log_manager:log_important:151 - [IMPORTANT] [analysis] Top keywords: word
+2026-04-01 21:37:04 | INFO     | comment_analyzer.core.output_manager:save_json:264 - Saved JSON file: [derived] ai_briefing.json -> 002_ai_briefing.json
+2026-04-01 21:37:04 | INFO     | comment_analyzer.core.log_manager:log_important:151 - [IMPORTANT] [pipeline] Pipeline analysis completed successfully
+2026-04-01 21:37:04 | INFO     | comment_analyzer.core.pipeline:save:177 - Saved 4 files successfully
+2026-04-01 21:37:05 | INFO     | comment_analyzer.core.pipeline:__init__:504 - CommentPipeline initialized (platform: generic)
+2026-04-01 21:37:05 | INFO     | comment_analyzer.core.pipeline:__init__:504 - CommentPipeline initialized (platform: generic)
+2026-04-01 21:37:05 | INFO     | comment_analyzer.core.pipeline:__init__:504 - CommentPipeline initialized (platform: generic)
+2026-04-01 21:37:05 | INFO     | comment_analyzer.core.pipeline:__init__:504 - CommentPipeline initialized (platform: generic)
+2026-04-01 21:37:05 | INFO     | comment_analyzer.core.pipeline:__init__:504 - CommentPipeline initialized (platform: generic)
+2026-04-01 21:37:05 | INFO     | comment_analyzer.core.pipeline:__init__:504 - CommentPipeline initialized (platform: generic)
+2026-04-01 21:37:05 | INFO     | comment_analyzer.core.log_manager:log_pipeline_start:198 - ============================================================
+Pipeline started
+2026-04-01 21:37:05 | INFO     | comment_analyzer.core.pipeline:run_async:736 - Using text column: 'comment'
+2026-04-01 21:37:05 | INFO     | comment_analyzer.core.pipeline:run_async:737 - Processing 30 comments...
+2026-04-01 21:37:05 | INFO     | comment_analyzer.core.log_manager:log_important:151 - [IMPORTANT] [analysis] Demand analysis complete
+2026-04-01 21:37:05 | INFO     | comment_analyzer.core.log_manager:log_important:151 - [IMPORTANT] [analysis] Profile-aware analysis completed
+2026-04-01 21:37:05 | INFO     | comment_analyzer.core.log_manager:log_important:151 - [IMPORTANT] [ml] Successfully trained naive_bayes
+2026-04-01 21:37:05 | ERROR    | comment_analyzer.core.pipeline:_run_sentiment_analysis:912 - Failed to train svm: This solver needs samples of at least 2 classes in the data, but the data contains only one class: 'positive'
+2026-04-01 21:37:05 | ERROR    | comment_analyzer.core.log_manager:log_error:265 - Error [ml]: This solver needs samples of at least 2 classes in the data, but the data contains only one class: 'positive'
+2026-04-01 21:37:05 | ERROR    | comment_analyzer.core.pipeline:_run_sentiment_analysis:912 - Failed to train logistic_regression: This solver needs samples of at least 2 classes in the data, but the data contains only one class: 'positive'
+2026-04-01 21:37:05 | ERROR    | comment_analyzer.core.log_manager:log_error:265 - Error [ml]: This solver needs samples of at least 2 classes in the data, but the data contains only one class: 'positive'
+2026-04-01 21:37:05 | INFO     | comment_analyzer.core.log_manager:log_important:151 - [IMPORTANT] [analysis] Topic modeling complete: 5 topics, 7 keywords
+2026-04-01 21:37:05 | INFO     | comment_analyzer.core.pipeline:run_async:797 - Pipeline completed successfully
+2026-04-01 21:37:05 | INFO     | comment_analyzer.core.pipeline:__init__:504 - CommentPipeline initialized (platform: generic)
+2026-04-01 21:37:05 | INFO     | comment_analyzer.core.log_manager:log_data_info:243 - Data [test.csv]: 2 rows
+2026-04-01 21:37:05 | INFO     | comment_analyzer.core.pipeline:load_data:624 - Loaded 2 rows from C:\Users\30847\AppData\Local\Temp\pytest-of-30847\pytest-95\test_load_data_csv0\test.csv
+2026-04-01 21:37:05 | INFO     | comment_analyzer.core.pipeline:__init__:504 - CommentPipeline initialized (platform: generic)
+2026-04-01 21:37:05 | INFO     | comment_analyzer.core.pipeline:__init__:504 - CommentPipeline initialized (platform: generic)
+2026-04-01 21:37:05 | INFO     | comment_analyzer.core.log_manager:log_pipeline_start:198 - ============================================================
+Pipeline started
+2026-04-01 21:37:05 | INFO     | comment_analyzer.core.pipeline:run_async:736 - Using text column: 'comment'
+2026-04-01 21:37:05 | INFO     | comment_analyzer.core.pipeline:run_async:737 - Processing 12 comments...
+2026-04-01 21:37:06 | INFO     | comment_analyzer.core.log_manager:log_important:151 - [IMPORTANT] [analysis] Demand analysis complete
+2026-04-01 21:37:06 | INFO     | comment_analyzer.core.log_manager:log_important:151 - [IMPORTANT] [analysis] Profile-aware analysis completed
+2026-04-01 21:37:06 | INFO     | comment_analyzer.core.log_manager:log_important:151 - [IMPORTANT] [ml] Successfully trained naive_bayes
+2026-04-01 21:37:06 | INFO     | comment_analyzer.core.log_manager:log_important:151 - [IMPORTANT] [ml] Successfully trained svm
+2026-04-01 21:37:06 | INFO     | comment_analyzer.core.log_manager:log_important:151 - [IMPORTANT] [ml] Successfully trained logistic_regression
+2026-04-01 21:37:06 | INFO     | comment_analyzer.core.log_manager:log_important:151 - [IMPORTANT] [analysis] Topic modeling complete: 5 topics, 12 keywords
+2026-04-01 21:37:06 | INFO     | comment_analyzer.core.pipeline:run_async:797 - Pipeline completed successfully
+2026-04-01 21:37:06 | INFO     | comment_analyzer.core.pipeline:__init__:504 - CommentPipeline initialized (platform: generic)
+2026-04-01 21:37:06 | INFO     | comment_analyzer.core.log_manager:log_pipeline_start:198 - ============================================================
+Pipeline started
+2026-04-01 21:37:06 | INFO     | comment_analyzer.core.pipeline:run_async:736 - Using text column: 'comment'
+2026-04-01 21:37:06 | INFO     | comment_analyzer.core.pipeline:run_async:737 - Processing 12 comments...
+2026-04-01 21:37:06 | INFO     | comment_analyzer.core.log_manager:log_important:151 - [IMPORTANT] [analysis] Demand analysis complete
+2026-04-01 21:37:06 | INFO     | comment_analyzer.core.log_manager:log_important:151 - [IMPORTANT] [analysis] Profile-aware analysis completed
+2026-04-01 21:37:06 | INFO     | comment_analyzer.core.log_manager:log_important:151 - [IMPORTANT] [ml] Successfully trained naive_bayes
+2026-04-01 21:37:06 | ERROR    | comment_analyzer.core.pipeline:_run_sentiment_analysis:912 - Failed to train svm: This solver needs samples of at least 2 classes in the data, but the data contains only one class: 'positive'
+2026-04-01 21:37:06 | ERROR    | comment_analyzer.core.log_manager:log_error:265 - Error [ml]: This solver needs samples of at least 2 classes in the data, but the data contains only one class: 'positive'
+2026-04-01 21:37:06 | ERROR    | comment_analyzer.core.pipeline:_run_sentiment_analysis:912 - Failed to train logistic_regression: This solver needs samples of at least 2 classes in the data, but the data contains only one class: 'positive'
+2026-04-01 21:37:06 | ERROR    | comment_analyzer.core.log_manager:log_error:265 - Error [ml]: This solver needs samples of at least 2 classes in the data, but the data contains only one class: 'positive'
+2026-04-01 21:37:06 | INFO     | comment_analyzer.core.log_manager:log_important:151 - [IMPORTANT] [analysis] Topic modeling complete: 5 topics, 17 keywords
+2026-04-01 21:37:06 | INFO     | comment_analyzer.core.pipeline:run_async:797 - Pipeline completed successfully
