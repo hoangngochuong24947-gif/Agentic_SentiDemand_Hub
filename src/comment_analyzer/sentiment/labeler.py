@@ -1,9 +1,11 @@
-"""Sentiment labeling module for comment_analyzer.
+"""Sentiment labeling helpers for Chinese and Korean review text."""
 
-Provides sentiment labeling capabilities using SnowNLP and other methods.
-"""
+from __future__ import annotations
 
-from typing import List, Optional, Union
+import json
+import re
+from pathlib import Path
+from typing import Dict, List, Optional, Union
 
 import pandas as pd
 from snownlp import SnowNLP
@@ -11,160 +13,132 @@ from tqdm import tqdm
 
 
 class SentimentLabeler:
-    """Sentiment labeler for Chinese text.
-
-    Labels text with sentiment scores using SnowNLP or rating-based methods.
-    Supports positive/negative/neutral classification.
-
-    Example:
-        >>> labeler = SentimentLabeler(method='snownlp')
-        >>> labeler.label("这个产品非常好！")
-        'positive'
-
-        >>> # Get raw score
-        >>> labeler.get_score("质量一般")
-        0.5
-
-        >>> # Batch processing
-        >>> labeler.label_batch(["很好", "很差", "一般"])
-        ['positive', 'negative', 'neutral']
-    """
+    """Label text as positive, negative, or neutral."""
 
     def __init__(
         self,
-        method: str = "snownlp",
+        method: str = "auto",
         threshold_positive: float = 0.6,
         threshold_negative: float = 0.4,
+        language: str = "zh",
+        lexicon_path: Optional[Union[str, Path]] = None,
     ):
-        """Initialize the sentiment labeler.
-
-        Args:
-            method: Labeling method. Options: 'snownlp', 'rating'.
-            threshold_positive: Score threshold for positive sentiment (0-1).
-            threshold_negative: Score threshold for negative sentiment (0-1).
-
-        Raises:
-            ValueError: If method is not supported.
-        """
-        if method not in ('snownlp', 'rating'):
-            raise ValueError(f"Invalid method: {method}. Choose from 'snownlp', 'rating'")
+        if method not in ("auto", "snownlp", "rating", "lexicon"):
+            raise ValueError("Invalid method: choose from 'auto', 'snownlp', 'rating', 'lexicon'")
 
         self.method = method
         self.threshold_positive = threshold_positive
         self.threshold_negative = threshold_negative
+        self.language = language
+        self.lexicon_path = Path(lexicon_path) if lexicon_path else None
+        self.lexicon = self._load_lexicon(self.lexicon_path)
+
+    def _resolve_method(self) -> str:
+        if self.method != "auto":
+            return self.method
+        return "lexicon" if self.language == "ko" else "snownlp"
+
+    @staticmethod
+    def _default_lexicon() -> Dict[str, List[str]]:
+        return {
+            "positive": ["좋", "만족", "추천", "빠르", "훌륭", "예쁘", "편하", "부드럽", "깔끔", "가성비"],
+            "negative": ["별로", "불만", "실망", "느리", "최악", "환불", "문제", "불편", "아쉽", "늦"],
+            "negations": ["안", "못", "없", "아니"],
+        }
+
+    def _load_lexicon(self, path: Optional[Path]) -> Dict[str, List[str]]:
+        if path and path.exists():
+            with open(path, "r", encoding="utf-8") as handle:
+                loaded = json.load(handle)
+            return {
+                "positive": loaded.get("positive", []),
+                "negative": loaded.get("negative", []),
+                "negations": loaded.get("negations", []),
+            }
+        return self._default_lexicon()
+
+    def _lexicon_score(self, text: str) -> float:
+        tokens = re.findall(r"[가-힣A-Za-z]+", text.lower())
+        if not tokens:
+            return 0.5
+
+        positive = 0
+        negative = 0
+        negations = set(self.lexicon.get("negations", []))
+
+        for index, token in enumerate(tokens):
+            window = tokens[max(0, index - 2):index]
+            negated = any(neg in window for neg in negations)
+            if any(keyword in token for keyword in self.lexicon.get("positive", [])):
+                if negated:
+                    negative += 1
+                else:
+                    positive += 1
+            if any(keyword in token for keyword in self.lexicon.get("negative", [])):
+                if negated:
+                    positive += 1
+                else:
+                    negative += 1
+
+        total = positive + negative
+        if total == 0:
+            return 0.5
+        return positive / total
 
     def get_score(self, text: str) -> float:
-        """Get sentiment score for text.
-
-        Args:
-            text: Input text.
-
-        Returns:
-            Sentiment score between 0 and 1.
-        """
         if not text or not isinstance(text, str):
             return 0.5
 
-        if self.method == 'snownlp':
+        resolved_method = self._resolve_method()
+        if resolved_method == "snownlp":
             try:
-                s = SnowNLP(text)
-                return s.sentiments
+                return SnowNLP(text).sentiments
             except Exception:
                 return 0.5
-        else:
-            return 0.5
+        if resolved_method == "lexicon":
+            return self._lexicon_score(text)
+        return 0.5
 
     def label(self, text: str) -> str:
-        """Label text with sentiment category.
-
-        Args:
-            text: Input text.
-
-        Returns:
-            Sentiment label: 'positive', 'negative', or 'neutral'.
-        """
         score = self.get_score(text)
-
         if score >= self.threshold_positive:
-            return 'positive'
-        elif score <= self.threshold_negative:
-            return 'negative'
-        else:
-            return 'neutral'
+            return "positive"
+        if score <= self.threshold_negative:
+            return "negative"
+        return "neutral"
 
-    def label_batch(
-        self,
-        texts: Union[List[str], pd.Series],
-        verbose: bool = False
-    ) -> List[str]:
-        """Label multiple texts with sentiment.
-
-        Args:
-            texts: List or Series of texts to label.
-            verbose: Whether to show progress bar.
-
-        Returns:
-            List of sentiment labels.
-        """
-        if verbose:
-            texts = tqdm(texts, desc="Labeling sentiment")
-
-        return [self.label(text) for text in texts]
+    def label_batch(self, texts: Union[List[str], pd.Series], verbose: bool = False) -> List[str]:
+        iterator = tqdm(texts, desc="Labeling sentiment") if verbose else texts
+        return [self.label(text) for text in iterator]
 
     def label_from_rating(
         self,
         ratings: Union[List[float], pd.Series],
         max_rating: float = 5.0,
         positive_threshold: float = 0.6,
-        negative_threshold: float = 0.4
+        negative_threshold: float = 0.4,
     ) -> List[str]:
-        """Label sentiment from numerical ratings.
-
-        Args:
-            ratings: List or Series of ratings.
-            max_rating: Maximum possible rating value.
-            positive_threshold: Threshold for positive (as ratio of max).
-            negative_threshold: Threshold for negative (as ratio of max).
-
-        Returns:
-            List of sentiment labels.
-        """
-        labels = []
+        labels: List[str] = []
         for rating in ratings:
             if pd.isna(rating):
-                labels.append('neutral')
+                labels.append("neutral")
                 continue
-
             normalized = float(rating) / max_rating
-
             if normalized >= positive_threshold:
-                labels.append('positive')
+                labels.append("positive")
             elif normalized <= negative_threshold:
-                labels.append('negative')
+                labels.append("negative")
             else:
-                labels.append('neutral')
-
+                labels.append("neutral")
         return labels
 
     def get_sentiment_distribution(self, labels: List[str]) -> dict:
-        """Calculate distribution of sentiment labels.
-
-        Args:
-            labels: List of sentiment labels.
-
-        Returns:
-            Dictionary with label counts and percentages.
-        """
         total = len(labels)
         if total == 0:
             return {}
 
         counts = {}
-        for label in ['positive', 'negative', 'neutral']:
+        for label in ("positive", "negative", "neutral"):
             count = labels.count(label)
-            counts[label] = {
-                'count': count,
-                'percentage': count / total * 100
-            }
-
+            counts[label] = {"count": count, "percentage": count / total * 100}
         return counts

@@ -190,3 +190,8 @@ class TestClassifier:
         summary = results.summary()
         assert "Accuracy" in summary
         assert "0.85" in summary
+
+    def test_korean_lexicon_labeling(self):
+        labeler = SentimentLabeler(method="lexicon", language="ko")
+        assert labeler.label("배송이 빠르고 정말 만족스러워요") == "positive"
+        assert labeler.label("포장이 엉망이고 너무 실망했어요") == "negative"

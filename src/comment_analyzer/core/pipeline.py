@@ -25,7 +25,7 @@ from comment_analyzer.core.output_manager import OutputManager, SavedFileInfo
 from comment_analyzer.core.settings import Settings, get_settings
 from comment_analyzer.preprocessing.cleaner import TextCleaner
 from comment_analyzer.preprocessing.filter import StopwordFilter
-from comment_analyzer.preprocessing.segmenter import JiebaSegmenter
+from comment_analyzer.preprocessing.segmenter import MultilingualSegmenter
 from comment_analyzer.sentiment.classifier import Classifier, ModelResults
 from comment_analyzer.sentiment.labeler import SentimentLabeler
 from comment_analyzer.sentiment.vectorizer import TFIDFVectorizer
@@ -501,8 +501,10 @@ to generating insights. It uses a configuration-driven approach for
             normalize_whitespace=self.settings.preprocessing.clean.normalize_whitespace,
         )
 
-        self.segmenter = JiebaSegmenter(
+        self.segmenter = MultilingualSegmenter(
+            language=self.settings.data.language,
             mode=self.settings.preprocessing.segmentation.mode,
+            backend=self.settings.preprocessing.segmentation.backend,
             custom_dict_path=self.settings.preprocessing.segmentation.custom_dict_path,
         )
 
@@ -518,6 +520,15 @@ to generating insights. It uses a configuration-driven approach for
             method=self.settings.sentiment.labeling_method,
             threshold_positive=self.settings.sentiment.snownlp.threshold_positive,
             threshold_negative=self.settings.sentiment.snownlp.threshold_negative,
+            language=self.settings.data.language,
+            lexicon_path=self.settings.get_sentiment_lexicon_path(),
+        )
+
+        logger.info(
+            "Language pipeline ready: language={}, segmenter={}, sentiment={}",
+            self.settings.data.language,
+            self.segmenter.resolved_backend,
+            self.sentiment_labeler._resolve_method(),
         )
 
         self.vectorizer = TFIDFVectorizer(
@@ -784,6 +795,7 @@ to generating insights. It uses a configuration-driven approach for
         if verbose:
             print("  Filtering stopwords...")
         df['filtered_text'] = df['segmented_text'].progress_apply(self.stopword_filter.filter)
+        df['filtered_text'] = df['filtered_text'].progress_apply(self._filter_noise_tokens)
 
         # Create space-joined version for vectorization
         df['processed_text'] = df['filtered_text'].apply(lambda x: ' '.join(x))
@@ -791,6 +803,28 @@ to generating insights. It uses a configuration-driven approach for
         logger.debug(f"Preprocessing complete: {len(df)} documents processed")
         return df
 
+    @staticmethod
+    def _filter_noise_tokens(tokens: List[str]) -> List[str]:
+        """Remove punctuation and malformed tokens missed by upstream cleaning."""
+        filtered: List[str] = []
+        for token in tokens:
+            if not token:
+                continue
+            normalized = str(token).strip().lower()
+            if not normalized:
+                continue
+            if re.fullmatch(r"[\W_]+", normalized, flags=re.UNICODE):
+                continue
+            if not re.search(r"[\u4e00-\u9fff\uac00-\ud7a3A-Za-z0-9]", normalized):
+                continue
+            if re.fullmatch(r"\d+(?:\.\d+)?", normalized):
+                continue
+            if "�" in normalized:
+                continue
+            if len(normalized) == 1 and not re.search(r"[\u4e00-\u9fff\uac00-\ud7a3A-Za-z]", normalized):
+                continue
+            filtered.append(token)
+        return filtered
     def _run_sentiment_analysis(
         self,
         df: pd.DataFrame,

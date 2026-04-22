@@ -145,7 +145,7 @@ class TestSettings:
         """Test accessing nested configuration."""
         settings = Settings()
         assert settings.data.platform == "generic"
-        assert settings.sentiment.labeling_method == "snownlp"
+        assert settings.sentiment.labeling_method == "auto"
         assert settings.topic.lda.num_topics == 5
 
     def test_get_stopwords_path_default(self, tmp_path):
