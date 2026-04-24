@@ -1,0 +1,45 @@
+==================================================
+Comment Analysis Summary
+==================================================
+
+Total comments: 36
+
+--- Sentiment Distribution ---
+  negative: 4 (11.1%)
+  neutral: 15 (41.7%)
+  positive: 17 (47.2%)
+
+--- Top Keywords ---
+  잘: 0.1164
+  만족합니다: 0.0743
+  기능은: 0.0725
+  조립이: 0.0556
+  깔끔하고: 0.0503
+  자주: 0.0503
+  좋습니다: 0.0490
+  매일: 0.0443
+  품질이: 0.0425
+  아직: 0.0422
+
+--- Topics ---
+  Topic 1: 만족합니다, 깔끔하고, 너무, 연결이, 향이
+  Topic 2: 잘, 품질이, 안, 때, 사용하기
+  Topic 3: 청소가, 조립이, 매일, 흡입력이, 좋아요
+  Topic 4: 기능은, 무난하지만, 음질이, 오래가서, 배터리도
+  Topic 5: 지도, 자주, 오래가서, 배터리도, 흡입력이
+
+--- Demand Intensity ---
+  quality: 0.0278
+  delivery: 0.0278
+  price: 0.0278
+  service: 0.0000
+  design: 0.0000
+
+--- Saved Files (9 total) ---
+  [sentiment] 004_model_report_logistic_regression.txt
+  [word_frequency] 001_top_keywords.csv
+  [word_frequency] 002_topics.csv
+  [demand] 001_demand_intensity.csv
+  [demand] 002_demand_correlation.csv
+
+==================================================

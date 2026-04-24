@@ -1,0 +1,76 @@
+INFO:     127.0.0.1:61824 - "GET /api/manifest HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60449 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57836 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57836 - "GET /workspace HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62522 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62522 - "GET /favicon.ico HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:64642 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53275 - "GET /workspace/099e576e77e9 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53275 - "GET /dashboard/099e576e77e9 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53275 - "GET /runs/099e576e77e9/artifacts/charts/8 HTTP/1.1" 400 Bad Request
+INFO:     127.0.0.1:59868 - "GET /runs/099e576e77e9/artifacts/charts/5 HTTP/1.1" 400 Bad Request
+INFO:     127.0.0.1:61685 - "GET /runs/099e576e77e9/artifacts/charts/4 HTTP/1.1" 400 Bad Request
+INFO:     127.0.0.1:54086 - "GET /runs/099e576e77e9/artifacts/charts/3 HTTP/1.1" 400 Bad Request
+INFO:     127.0.0.1:64922 - "GET /runs/099e576e77e9/artifacts/charts/1 HTTP/1.1" 400 Bad Request
+INFO:     127.0.0.1:50685 - "GET /runs/099e576e77e9/artifacts/charts/2 HTTP/1.1" 400 Bad Request
+INFO:     127.0.0.1:53275 - "GET /runs/099e576e77e9/artifacts/charts/0 HTTP/1.1" 400 Bad Request
+INFO:     127.0.0.1:59868 - "GET /runs/099e576e77e9/artifacts/charts/7 HTTP/1.1" 400 Bad Request
+INFO:     127.0.0.1:61685 - "GET /runs/099e576e77e9/artifacts/charts/6 HTTP/1.1" 400 Bad Request
+INFO:     127.0.0.1:58505 - "GET /insights/099e576e77e9 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56853 - "GET /dashboard/099e576e77e9 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56853 - "GET /runs/099e576e77e9/artifacts/charts/0 HTTP/1.1" 400 Bad Request
+INFO:     127.0.0.1:57409 - "GET /runs/099e576e77e9/artifacts/charts/2 HTTP/1.1" 400 Bad Request
+INFO:     127.0.0.1:58289 - "GET /runs/099e576e77e9/artifacts/charts/8 HTTP/1.1" 400 Bad Request
+INFO:     127.0.0.1:62877 - "GET /runs/099e576e77e9/artifacts/charts/4 HTTP/1.1" 400 Bad Request
+INFO:     127.0.0.1:59949 - "GET /runs/099e576e77e9/artifacts/charts/6 HTTP/1.1" 400 Bad Request
+INFO:     127.0.0.1:60127 - "GET /runs/099e576e77e9/artifacts/charts/5 HTTP/1.1" 400 Bad Request
+INFO:     127.0.0.1:56853 - "GET /runs/099e576e77e9/artifacts/charts/7 HTTP/1.1" 400 Bad Request
+INFO:     127.0.0.1:57409 - "GET /runs/099e576e77e9/artifacts/charts/1 HTTP/1.1" 400 Bad Request
+INFO:     127.0.0.1:58289 - "GET /runs/099e576e77e9/artifacts/charts/3 HTTP/1.1" 400 Bad Request
+INFO:     127.0.0.1:58289 - "GET /workspace/099e576e77e9 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59627 - "GET /dashboard/099e576e77e9 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59627 - "GET /runs/099e576e77e9/artifacts/charts/1 HTTP/1.1" 400 Bad Request
+INFO:     127.0.0.1:51100 - "GET /runs/099e576e77e9/artifacts/charts/0 HTTP/1.1" 400 Bad Request
+INFO:     127.0.0.1:51062 - "GET /runs/099e576e77e9/artifacts/charts/6 HTTP/1.1" 400 Bad Request
+INFO:     127.0.0.1:50873 - "GET /runs/099e576e77e9/artifacts/charts/5 HTTP/1.1" 400 Bad Request
+INFO:     127.0.0.1:54750 - "GET /runs/099e576e77e9/artifacts/charts/7 HTTP/1.1" 400 Bad Request
+INFO:     127.0.0.1:64846 - "GET /runs/099e576e77e9/artifacts/charts/8 HTTP/1.1" 400 Bad Request
+INFO:     127.0.0.1:59627 - "GET /runs/099e576e77e9/artifacts/charts/4 HTTP/1.1" 400 Bad Request
+INFO:     127.0.0.1:51100 - "GET /runs/099e576e77e9/artifacts/charts/2 HTTP/1.1" 400 Bad Request
+INFO:     127.0.0.1:51062 - "GET /runs/099e576e77e9/artifacts/charts/3 HTTP/1.1" 400 Bad Request
+INFO:     127.0.0.1:51062 - "GET /runs/099e576e77e9/artifacts/charts/1?download=true HTTP/1.1" 400 Bad Request
+INFO:     127.0.0.1:59012 - "GET /runs/099e576e77e9/artifacts/charts/7 HTTP/1.1" 400 Bad Request
+INFO:     127.0.0.1:64419 - "GET /runs/099e576e77e9/artifacts/charts/6 HTTP/1.1" 400 Bad Request
+INFO:     127.0.0.1:59015 - "GET /runs/099e576e77e9/artifacts/charts/2 HTTP/1.1" 400 Bad Request
+INFO:     127.0.0.1:50821 - "GET /runs/099e576e77e9/artifacts/charts/5 HTTP/1.1" 400 Bad Request
+INFO:     127.0.0.1:50677 - "GET /runs/099e576e77e9/artifacts/charts/3 HTTP/1.1" 400 Bad Request
+INFO:     127.0.0.1:56354 - "GET /runs/099e576e77e9/artifacts/charts/8 HTTP/1.1" 400 Bad Request
+INFO:     127.0.0.1:59015 - "GET /runs/099e576e77e9/artifacts/charts/4 HTTP/1.1" 400 Bad Request
+INFO:     127.0.0.1:59012 - "GET /runs/099e576e77e9/artifacts/charts/0 HTTP/1.1" 400 Bad Request
+INFO:     127.0.0.1:64419 - "GET /runs/099e576e77e9/artifacts/charts/1 HTTP/1.1" 400 Bad Request
+INFO:     127.0.0.1:59012 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52963 - "GET /workspace HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59943 - "GET /workspace/099e576e77e9 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59943 - "GET /dashboard/099e576e77e9 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59943 - "GET /runs/099e576e77e9/artifacts/charts/4 HTTP/1.1" 400 Bad Request
+INFO:     127.0.0.1:60744 - "GET /runs/099e576e77e9/artifacts/charts/7 HTTP/1.1" 400 Bad Request
+INFO:     127.0.0.1:62178 - "GET /runs/099e576e77e9/artifacts/charts/3 HTTP/1.1" 400 Bad Request
+INFO:     127.0.0.1:51331 - "GET /runs/099e576e77e9/artifacts/charts/0 HTTP/1.1" 400 Bad Request
+INFO:     127.0.0.1:55835 - "GET /runs/099e576e77e9/artifacts/charts/5 HTTP/1.1" 400 Bad Request
+INFO:     127.0.0.1:58504 - "GET /runs/099e576e77e9/artifacts/charts/1 HTTP/1.1" 400 Bad Request
+INFO:     127.0.0.1:59943 - "GET /runs/099e576e77e9/artifacts/charts/6 HTTP/1.1" 400 Bad Request
+INFO:     127.0.0.1:62178 - "GET /runs/099e576e77e9/artifacts/charts/8 HTTP/1.1" 400 Bad Request
+INFO:     127.0.0.1:60744 - "GET /runs/099e576e77e9/artifacts/charts/2 HTTP/1.1" 400 Bad Request
+INFO:     127.0.0.1:60744 - "GET /dashboard/33a7a673fcea HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59943 - "GET /runs/33a7a673fcea/artifacts/charts/7 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51331 - "GET /runs/33a7a673fcea/artifacts/charts/2 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59943 - "GET /runs/33a7a673fcea/artifacts/charts/3 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62178 - "GET /runs/33a7a673fcea/artifacts/charts/5 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60744 - "GET /runs/33a7a673fcea/artifacts/charts/1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58504 - "GET /runs/33a7a673fcea/artifacts/charts/4 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55835 - "GET /runs/33a7a673fcea/artifacts/charts/6 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51331 - "GET /runs/33a7a673fcea/artifacts/charts/8 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59943 - "GET /runs/33a7a673fcea/artifacts/charts/0 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62465 - "GET /insights/33a7a673fcea HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62465 - "GET /workspace/33a7a673fcea HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62465 - "GET / HTTP/1.1" 200 OK

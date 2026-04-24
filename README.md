@@ -169,6 +169,46 @@ flake8 src tests
 mypy src
 ```
 
+#### Korean validation dataset
+
+This repository includes a synthetic Korean review dataset generator for
+language-specific validation:
+
+```bash
+python scripts/generate_korean_test_dataset.py
+python scripts/validate_korean_pipeline.py
+```
+
+Generated files:
+- `data/korean_reviews_mock.csv`
+- `data/korean_reviews_mock.json`
+- `outputs/korean_validation_report.json`
+
+The Korean pipeline currently supports a regex fallback segmenter. If `konlpy`
+is installed, `Okt` can be selected through:
+
+```bash
+COMMENT_ANALYZER_DATA__LANGUAGE=ko
+COMMENT_ANALYZER_PREPROCESSING__SEGMENTATION__BACKEND=okt
+COMMENT_ANALYZER_SENTIMENT__LABELING_METHOD=lexicon
+```
+
+#### README update policy
+
+Keep this README updated with every meaningful project change. Commits that
+change source code, configuration, scripts, tests, or data should include a
+staged `README.md` update explaining the user-facing workflow, validation
+steps, or operational impact.
+
+Install the repository hooks after cloning or when hook templates change:
+
+```bash
+python scripts/install_hooks.py
+```
+
+The pre-commit hook enforces this README policy before running the focused
+verification tests.
+
 ---
 
 ### 10. Project Layout
@@ -359,4 +399,3 @@ mypy src
 ### 10. 开源协议
 
 本项目采用 **MIT License**，详见 `LICENSE`。
-

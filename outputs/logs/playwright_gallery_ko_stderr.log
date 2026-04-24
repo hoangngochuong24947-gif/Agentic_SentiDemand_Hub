@@ -1,0 +1,56 @@
+2026-04-23 15:34:42.159 | INFO     | __main__:run_gallery_server:946 - Starting gallery server on http://127.0.0.1:8766
+INFO:     Started server process [56288]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:8766 (Press CTRL+C to quit)
+2026-04-23 15:35:11.675 | INFO     | __main__:upload:855 - Uploaded file saved to C:\Users\30847\.sentidemand\uploads\20260423_153511_korean_reviews_mock.csv
+2026-04-23 15:35:11.678 | DEBUG    | comment_analyzer.core.log_manager:clear_entries:338 - Cleared 0 log entries
+[32m2026-04-23 15:35:11[0m | [1mINFO    [0m | [36mcomment_analyzer.core.log_manager[0m:[36mconfigure[0m:[36m91[0m - [1mLogging configured at level: INFO[0m
+[32m2026-04-23 15:35:11[0m | [1mINFO    [0m | [36mcomment_analyzer.core.pipeline[0m:[36m_init_components[0m:[36m527[0m - [1mLanguage pipeline ready: language=ko, segmenter=regex, sentiment=lexicon[0m
+[32m2026-04-23 15:35:11[0m | [1mINFO    [0m | [36mcomment_analyzer.core.pipeline[0m:[36m__init__[0m:[36m491[0m - [1mCommentPipeline initialized (platform: generic)[0m
+[32m2026-04-23 15:35:11[0m | [1mINFO    [0m | [36mcomment_analyzer.core.log_manager[0m:[36mlog_data_info[0m:[36m243[0m - [1mData [20260423_153511_korean_reviews_mock.csv]: 36 rows[0m
+[32m2026-04-23 15:35:11[0m | [1mINFO    [0m | [36mcomment_analyzer.core.pipeline[0m:[36mload_data[0m:[36m622[0m - [1mLoaded 36 rows from C:\Users\30847\.sentidemand\uploads\20260423_153511_korean_reviews_mock.csv[0m
+[32m2026-04-23 15:35:11[0m | [1mINFO    [0m | [36mcomment_analyzer.core.log_manager[0m:[36mlog_pipeline_start[0m:[36m198[0m - [1m============================================================
+Pipeline started[0m
+[32m2026-04-23 15:35:11[0m | [1mINFO    [0m | [36mcomment_analyzer.core.pipeline[0m:[36mrun[0m:[36m717[0m - [1mUsing text column: 'comment'[0m
+[32m2026-04-23 15:35:11[0m | [1mINFO    [0m | [36mcomment_analyzer.core.pipeline[0m:[36mrun[0m:[36m718[0m - [1mProcessing 36 comments...[0m
+[32m2026-04-23 15:35:11[0m | [1mINFO    [0m | [36mcomment_analyzer.core.log_manager[0m:[36mlog_important[0m:[36m151[0m - [1m[IMPORTANT] [ml] Successfully trained naive_bayes[0m
+[32m2026-04-23 15:35:11[0m | [1mINFO    [0m | [36mcomment_analyzer.core.log_manager[0m:[36mlog_important[0m:[36m151[0m - [1m[IMPORTANT] [ml] Successfully trained svm[0m
+C:\Users\30847\Desktop\antigravity\Agentic_SentiDemand_Hub\.venv\Lib\site-packages\sklearn\linear_model\_logistic.py:1184: FutureWarning: 'n_jobs' has no effect since 1.8 and will be removed in 1.10. You provided 'n_jobs=-1', please leave it unspecified.
+  warnings.warn(msg, category=FutureWarning)
+[32m2026-04-23 15:35:11[0m | [1mINFO    [0m | [36mcomment_analyzer.core.log_manager[0m:[36mlog_important[0m:[36m151[0m - [1m[IMPORTANT] [ml] Successfully trained logistic_regression[0m
+[32m2026-04-23 15:35:12[0m | [1mINFO    [0m | [36mcomment_analyzer.core.log_manager[0m:[36mlog_important[0m:[36m151[0m - [1m[IMPORTANT] [analysis] Topic modeling complete: 5 topics, 20 keywords[0m
+[32m2026-04-23 15:35:12[0m | [1mINFO    [0m | [36mcomment_analyzer.core.log_manager[0m:[36mlog_important[0m:[36m151[0m - [1m[IMPORTANT] [analysis] Demand analysis complete[0m
+[32m2026-04-23 15:35:12[0m | [1mINFO    [0m | [36mcomment_analyzer.core.pipeline[0m:[36mrun[0m:[36m771[0m - [1mPipeline completed successfully[0m
+[32m2026-04-23 15:35:12[0m | [1mINFO    [0m | [36mcomment_analyzer.core.pipeline[0m:[36msave[0m:[36m146[0m - [1mStarting to save pipeline results...[0m
+[32m2026-04-23 15:35:12[0m | [1mINFO    [0m | [36mcomment_analyzer.core.output_manager[0m:[36msave_dataframe[0m:[36m186[0m - [1mSaved DataFrame: [derived] processed_data.csv -> 001_processed_data.csv[0m
+[32m2026-04-23 15:35:12[0m | [1mINFO    [0m | [36mcomment_analyzer.core.output_manager[0m:[36msave_dataframe[0m:[36m186[0m - [1mSaved DataFrame: [sentiment] sentiment_distribution.csv -> 001_sentiment_distribution.csv[0m
+[32m2026-04-23 15:35:12[0m | [1mINFO    [0m | [36mcomment_analyzer.core.log_manager[0m:[36mlog_analysis[0m:[36m120[0m - [1mAnalysis [sentiment_distribution]: 3 results[0m
+[32m2026-04-23 15:35:12[0m | [1mINFO    [0m | [36mcomment_analyzer.core.output_manager[0m:[36msave_text[0m:[36m222[0m - [1mSaved text file: [sentiment] model_report_naive_bayes.txt -> 002_model_report_naive_bayes.txt[0m
+[32m2026-04-23 15:35:12[0m | [1mINFO    [0m | [36mcomment_analyzer.core.log_manager[0m:[36mlog_important[0m:[36m151[0m - [1m[IMPORTANT] [ml] Trained naive_bayes model[0m
+[32m2026-04-23 15:35:12[0m | [1mINFO    [0m | [36mcomment_analyzer.core.output_manager[0m:[36msave_text[0m:[36m222[0m - [1mSaved text file: [sentiment] model_report_svm.txt -> 003_model_report_svm.txt[0m
+[32m2026-04-23 15:35:12[0m | [1mINFO    [0m | [36mcomment_analyzer.core.log_manager[0m:[36mlog_important[0m:[36m151[0m - [1m[IMPORTANT] [ml] Trained svm model[0m
+[32m2026-04-23 15:35:12[0m | [1mINFO    [0m | [36mcomment_analyzer.core.output_manager[0m:[36msave_text[0m:[36m222[0m - [1mSaved text file: [sentiment] model_report_logistic_regression.txt -> 004_model_report_logistic_regression.txt[0m
+[32m2026-04-23 15:35:12[0m | [1mINFO    [0m | [36mcomment_analyzer.core.log_manager[0m:[36mlog_important[0m:[36m151[0m - [1m[IMPORTANT] [ml] Trained logistic_regression model[0m
+[32m2026-04-23 15:35:12[0m | [1mINFO    [0m | [36mcomment_analyzer.core.output_manager[0m:[36msave_dataframe[0m:[36m186[0m - [1mSaved DataFrame: [word_frequency] top_keywords.csv -> 001_top_keywords.csv[0m
+[32m2026-04-23 15:35:12[0m | [1mINFO    [0m | [36mcomment_analyzer.core.log_manager[0m:[36mlog_important[0m:[36m151[0m - [1m[IMPORTANT] [analysis] Top keywords: 잘, 만족합니다, 기능은, 조립이, 깔끔하고[0m
+[32m2026-04-23 15:35:12[0m | [1mINFO    [0m | [36mcomment_analyzer.core.output_manager[0m:[36msave_dataframe[0m:[36m186[0m - [1mSaved DataFrame: [word_frequency] topics.csv -> 002_topics.csv[0m
+[32m2026-04-23 15:35:12[0m | [1mINFO    [0m | [36mcomment_analyzer.core.log_manager[0m:[36mlog_analysis[0m:[36m120[0m - [1mAnalysis [topic_modeling]: 3 results[0m
+[32m2026-04-23 15:35:12[0m | [1mINFO    [0m | [36mcomment_analyzer.core.output_manager[0m:[36msave_dataframe[0m:[36m186[0m - [1mSaved DataFrame: [demand] demand_intensity.csv -> 001_demand_intensity.csv[0m
+[32m2026-04-23 15:35:12[0m | [1mINFO    [0m | [36mcomment_analyzer.core.log_manager[0m:[36mlog_analysis[0m:[36m120[0m - [1mAnalysis [demand_intensity]: 5 results[0m
+[32m2026-04-23 15:35:12[0m | [1mINFO    [0m | [36mcomment_analyzer.core.output_manager[0m:[36msave_dataframe[0m:[36m186[0m - [1mSaved DataFrame: [demand] demand_correlation.csv -> 002_demand_correlation.csv[0m
+[32m2026-04-23 15:35:12[0m | [1mINFO    [0m | [36mcomment_analyzer.core.log_manager[0m:[36mlog_important[0m:[36m151[0m - [1m[IMPORTANT] [analysis] Demand correlation analysis completed[0m
+[32m2026-04-23 15:35:12[0m | [1mINFO    [0m | [36mcomment_analyzer.core.log_manager[0m:[36mlog_important[0m:[36m151[0m - [1m[IMPORTANT] [pipeline] Pipeline analysis completed successfully[0m
+[32m2026-04-23 15:35:12[0m | [1mINFO    [0m | [36mcomment_analyzer.core.log_manager[0m:[36mlog_pipeline_end[0m:[36m214[0m - [1mPipeline completed in 0.50s[0m
+[32m2026-04-23 15:35:12[0m | [1mINFO    [0m | [36mcomment_analyzer.core.pipeline[0m:[36msave[0m:[36m171[0m - [1mSaved 9 files successfully[0m
+[32m2026-04-23 15:35:12[0m | [1mINFO    [0m | [36mcomment_analyzer.core.log_manager[0m:[36mexport_log_entries[0m:[36m307[0m - [1mExported 15 log entries to outputs\workspace_runs\6fb0fd8ddf0b\logs\log_entries.json[0m
+[32m2026-04-23 15:35:12[0m | [1mINFO    [0m | [36mcomment_analyzer.visualization.generator[0m:[36m_generate_one[0m:[36m171[0m - [1m  ✅ 评论情感极性分布 → sentiment_donut_153512.html[0m
+[32m2026-04-23 15:35:12[0m | [1mINFO    [0m | [36mcomment_analyzer.visualization.generator[0m:[36m_generate_one[0m:[36m171[0m - [1m  ✅ 模型特征正负面双向对比 → features_bidirectional_153512.html[0m
+[32m2026-04-23 15:35:12[0m | [1mINFO    [0m | [36mcomment_analyzer.visualization.generator[0m:[36m_generate_one[0m:[36m171[0m - [1m  ✅ 高频核心词汇 Top30 → features_lollipop_153512.html[0m
+[32m2026-04-23 15:35:12[0m | [1mINFO    [0m | [36mcomment_analyzer.visualization.generator[0m:[36m_generate_one[0m:[36m171[0m - [1m  ✅ 多模型特征权重热力图 → features_heatmap_153512.html[0m
+[32m2026-04-23 15:35:12[0m | [1mINFO    [0m | [36mcomment_analyzer.visualization.generator[0m:[36m_generate_one[0m:[36m171[0m - [1m  ✅ TF-IDF vs 词频对比 → features_tfidf_scatter_153512.html[0m
+[32m2026-04-23 15:35:12[0m | [1mINFO    [0m | [36mcomment_analyzer.visualization.generator[0m:[36m_generate_one[0m:[36m171[0m - [1m  ✅ LDA 主题占比玫瑰图 → topics_nightingale_153512.html[0m
+[32m2026-04-23 15:35:12[0m | [1mINFO    [0m | [36mcomment_analyzer.visualization.generator[0m:[36m_generate_one[0m:[36m171[0m - [1m  ✅ 主题关键词气泡矩阵 → topics_bubble_153512.html[0m
+[32m2026-04-23 15:35:12[0m | [1mINFO    [0m | [36mcomment_analyzer.visualization.generator[0m:[36m_generate_one[0m:[36m171[0m - [1m  ✅ 模型评估雷达图 → topics_radar_153512.html[0m
+[32m2026-04-23 15:35:12[0m | [1mINFO    [0m | [36mcomment_analyzer.visualization.generator[0m:[36m_generate_one[0m:[36m171[0m - [1m  ✅ 需求共现网络关系图 → demand_network_153512.html[0m
+[32m2026-04-23 15:35:12[0m | [1mINFO    [0m | [36mcomment_analyzer.visualization.generator[0m:[36mgenerate_all[0m:[36m104[0m - [1mGenerated 9/14 charts → C:\Users\30847\.sentidemand\outputs\20260423_153511_korean_reviews_mock_20260423[0m

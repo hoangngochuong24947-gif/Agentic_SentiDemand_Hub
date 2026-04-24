@@ -15,7 +15,7 @@ def detect_okt() -> dict:
     try:
         from konlpy.tag import Okt
 
-        tokens = Okt().morphs("배송이 빠르고 품질도 만족스러워요", norm=True, stem=True)
+        tokens = Okt().morphs("배송이 빠르고 음질이 좋아서 계속 사용하고 싶어요", norm=True, stem=True)
         return {"available": True, "backend": "okt", "tokens": tokens}
     except Exception as exc:
         return {"available": False, "backend": "regex", "tokens": [], "error": str(exc)}

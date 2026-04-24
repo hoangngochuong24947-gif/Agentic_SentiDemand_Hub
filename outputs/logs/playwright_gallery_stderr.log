@@ -1,0 +1,5 @@
+2026-04-23 15:26:37.021 | INFO     | __main__:run_gallery_server:946 - Starting gallery server on http://127.0.0.1:8765
+INFO:     Started server process [24672]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:8765 (Press CTRL+C to quit)
