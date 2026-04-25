@@ -1,0 +1,79 @@
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - link "SentiDemand home" [ref=e5] [cursor=pointer]:
+      - /url: /app
+      - img [ref=e6]
+      - generic [ref=e9]: SentiDemand
+    - navigation "Primary navigation" [ref=e10]:
+      - link "Upload" [ref=e11] [cursor=pointer]:
+        - /url: /app
+        - img [ref=e12]
+        - generic [ref=e15]: Upload
+      - link "Runs" [ref=e16] [cursor=pointer]:
+        - /url: /app/runs
+        - img [ref=e17]
+        - generic [ref=e20]: Runs
+      - link "Tables" [ref=e21] [cursor=pointer]:
+        - /url: /app/workspace
+        - img [ref=e22]
+        - generic [ref=e25]: Tables
+      - link "Charts" [ref=e26] [cursor=pointer]:
+        - /url: /app/dashboard/latest
+        - img [ref=e27]
+        - generic [ref=e29]: Charts
+      - link "Advice" [ref=e30] [cursor=pointer]:
+        - /url: /app/insights/latest
+        - img [ref=e31]
+        - generic [ref=e41]: Advice
+  - main [ref=e42]:
+    - generic [ref=e43]:
+      - generic [ref=e44]:
+        - generic [ref=e45]: Upload
+        - heading "SentiDemand" [level=1] [ref=e46]
+        - paragraph [ref=e47]: Review intelligence command center.
+      - generic [ref=e49]: Phase 1
+    - generic [ref=e50]:
+      - generic [ref=e51]:
+        - generic [ref=e52] [cursor=pointer]:
+          - img [ref=e53]
+          - generic [ref=e56]: Drop or select
+          - generic [ref=e57]: CSV XLSX XLS JSON
+        - button "Analyze" [disabled] [ref=e58]
+      - generic [ref=e59]:
+        - generic [ref=e60]:
+          - heading "Recent Runs" [level=2] [ref=e61]
+          - link "All" [ref=e62] [cursor=pointer]:
+            - /url: /app/runs
+        - generic [ref=e63]:
+          - img [ref=e64]
+          - generic [ref=e66]: Loading runs
+    - generic [ref=e67]:
+      - article [ref=e68]:
+        - img [ref=e69]
+        - generic [ref=e72]: Runs
+        - strong [ref=e73]: "0"
+      - article [ref=e74]:
+        - img [ref=e75]
+        - generic [ref=e78]: Tables
+        - strong [ref=e79]: "0"
+      - article [ref=e80]:
+        - img [ref=e81]
+        - generic [ref=e83]: Charts
+        - strong [ref=e84]: "0"
+      - article [ref=e85]:
+        - img [ref=e86]
+        - generic [ref=e96]: Advice
+        - strong [ref=e97]: none
+    - article [ref=e98]:
+      - generic [ref=e99]:
+        - generic [ref=e100]:
+          - img [ref=e101]
+          - strong [ref=e103]: Phase 1
+        - generic [ref=e104]: in_progress
+      - progressbar [ref=e105]
+      - paragraph [ref=e107]: React shell is connected to the current Hub endpoints.
+      - generic [ref=e108]: "Next: Finish route screens, verify build, then begin /api/v1 extraction."
+    - generic [ref=e109]:
+      - article [ref=e110]: Bilibili
+      - article [ref=e111]: JD
+      - article [ref=e112]: Chrome

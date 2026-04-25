@@ -151,6 +151,10 @@ def _allowed_roots(settings: Settings) -> List[Path]:
     ]
 
 
+def _frontend_dist_dir() -> Path:
+    return Path(__file__).resolve().parents[3] / "frontend" / "dist"
+
+
 def _ensure_safe_path(settings: Settings, raw_path: str) -> Path:
     if not raw_path:
         raise ValueError("Artifact path is empty")
@@ -600,6 +604,34 @@ def create_app(settings: Optional[Settings] = None) -> Any:
     app_settings.paths.ensure_directories()
     run_registry = _registry(app_settings)
     app = FastAPI(title="SentiDemand Visualization Gallery", version=_RUNS_VERSION)
+    frontend_dist = _frontend_dist_dir()
+
+    def _frontend_index_response() -> Any:
+        index_path = frontend_dist / "index.html"
+        if not index_path.exists():
+            raise HTTPException(
+                status_code=404,
+                detail="React frontend is not built. Run `npm install && npm run build` in frontend/.",
+            )
+        return FileResponse(index_path, media_type="text/html; charset=utf-8")
+
+    @app.get("/app", response_class=HTMLResponse)
+    def react_app_index() -> Any:
+        return _frontend_index_response()
+
+    @app.get("/app/assets/{asset_path:path}")
+    def react_app_asset(asset_path: str) -> Any:
+        assets_root = (frontend_dist / "assets").resolve()
+        target = (assets_root / asset_path).resolve()
+        if assets_root not in target.parents and target != assets_root:
+            raise HTTPException(status_code=400, detail="Invalid frontend asset path")
+        if not target.exists() or not target.is_file():
+            raise HTTPException(status_code=404, detail="Frontend asset not found")
+        return FileResponse(target, media_type=mimetypes.guess_type(target.name)[0] or "application/octet-stream")
+
+    @app.get("/app/{spa_path:path}", response_class=HTMLResponse)
+    def react_app_spa(spa_path: str) -> Any:
+        return _frontend_index_response()
 
     @app.get("/", response_class=HTMLResponse)
     def index() -> Any:

@@ -1,0 +1,3 @@
+[      47ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://127.0.0.1:8877/assets/index-CK1HSFvU.css:0
+[      49ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://127.0.0.1:8877/assets/index-q4Q1KSsp.js:0
+[      74ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://127.0.0.1:8877/favicon.ico:0

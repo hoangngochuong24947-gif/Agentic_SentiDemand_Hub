@@ -1,17 +1,38 @@
 # Agentic SentiDemand Hub / 智能评论需求洞察中枢
 
-> A reusable NLP toolkit for e-commerce comment analysis, topic discovery, demand insights, and standalone visualization generation.  
+> A reusable NLP toolkit for e-commerce comment analysis, topic discovery, demand insights, and standalone visualization generation.
 > 一个可复用的电商评论 NLP 分析工具包，支持情感分析、主题发现、需求洞察与独立可视化生成。
 
 ---
 
 ## English
 
+### React Frontend Rebuild
+
+Phase 1 of the frontend rebuild lives in `frontend/` and uses Vite + React + TypeScript. During development, start the existing Hub backend on port `8765`, then run:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+The production build can be served by the existing FastAPI Hub at `/app`:
+
+```bash
+cd frontend
+npm run build
+python -m comment_analyzer.visualization.gallery
+```
+
+Then open `http://127.0.0.1:8765/app`.
+
 ### 1. What This Project Is
 
 **Agentic SentiDemand Hub** is built on `comment_analyzer`, a modular Python pipeline for analyzing review/comment datasets.
 
 It provides:
+
 - Text preprocessing (cleaning, segmentation, stopword filtering)
 - Sentiment labeling + ML classification
 - Keyword extraction + LDA topic modeling
@@ -88,6 +109,7 @@ print(files[:3])
 ```
 
 Default visualization output path:
+
 - `~/.sentidemand/outputs/{source}_{YYYYMMDD}/`
 - Global index: `~/.sentidemand/outputs/manifest.json`
 
@@ -100,6 +122,7 @@ python -m comment_analyzer.visualization.gallery
 ```
 
 Default URL:
+
 - `http://127.0.0.1:8765`
 
 If optional deps are missing, install:
@@ -113,9 +136,11 @@ pip install -e ".[viz]"
 ### 7. Configuration
 
 Default config file:
+
 - `config/default.yaml`
 
 Main sections:
+
 - `data`
 - `preprocessing`
 - `sentiment`
@@ -126,6 +151,7 @@ Main sections:
 - `visualization`
 
 Environment variables:
+
 - Prefix: `COMMENT_ANALYZER_`
 - Nested delimiter: `__`
 
@@ -141,6 +167,7 @@ COMMENT_ANALYZER_VISUALIZATION__AUTO_OPEN_BROWSER=false
 ### 8. Output Structure
 
 Analysis outputs (default):
+
 - `./outputs/demand_analysis/`
 - `./outputs/sentiment_models/`
 - `./outputs/word_frequency/`
@@ -148,6 +175,7 @@ Analysis outputs (default):
 - `./outputs/logs/`
 
 Visualization outputs (default):
+
 - `~/.sentidemand/outputs/`
 - `~/.sentidemand/uploads/`
 
@@ -180,6 +208,7 @@ python scripts/validate_korean_pipeline.py
 ```
 
 Generated files:
+
 - `data/korean_reviews_mock.csv`
 - `data/korean_reviews_mock.json`
 - `outputs/korean_validation_report.json`
@@ -242,6 +271,7 @@ Agentic_SentiDemand_Hub/
 **Agentic SentiDemand Hub** 基于 `comment_analyzer`，是一个模块化的评论数据分析流水线。
 
 它提供：
+
 - 文本预处理（清洗、分词、停用词过滤）
 - 情感打标与机器学习分类
 - 关键词提取与 LDA 主题建模
@@ -313,6 +343,7 @@ print(files[:3])
 ```
 
 默认可视化输出路径：
+
 - `~/.sentidemand/outputs/{数据源}_{YYYYMMDD}/`
 - 全局索引：`~/.sentidemand/outputs/manifest.json`
 
@@ -325,6 +356,7 @@ python -m comment_analyzer.visualization.gallery
 ```
 
 默认地址：
+
 - `http://127.0.0.1:8765`
 
 若提示缺依赖，请安装：
@@ -338,9 +370,11 @@ pip install -e ".[viz]"
 ### 7. 配置说明
 
 默认配置文件：
+
 - `config/default.yaml`
 
 主要配置节：
+
 - `data`
 - `preprocessing`
 - `sentiment`
@@ -351,6 +385,7 @@ pip install -e ".[viz]"
 - `visualization`
 
 环境变量规则：
+
 - 前缀：`COMMENT_ANALYZER_`
 - 嵌套分隔符：`__`
 
@@ -366,6 +401,7 @@ COMMENT_ANALYZER_VISUALIZATION__AUTO_OPEN_BROWSER=false
 ### 8. 输出目录
 
 分析输出（默认）：
+
 - `./outputs/demand_analysis/`
 - `./outputs/sentiment_models/`
 - `./outputs/word_frequency/`
@@ -373,6 +409,7 @@ COMMENT_ANALYZER_VISUALIZATION__AUTO_OPEN_BROWSER=false
 - `./outputs/logs/`
 
 可视化输出（默认）：
+
 - `~/.sentidemand/outputs/`
 - `~/.sentidemand/uploads/`
 

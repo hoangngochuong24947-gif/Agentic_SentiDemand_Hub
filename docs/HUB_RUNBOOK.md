@@ -51,3 +51,26 @@
   - 展示层由 `pages.py` 负责。
   - Hub API 编排和落盘由 `gallery.py` 负责。
   - LLM 建议由 DeepSeek 独立 API 调用逻辑负责。
+# React Phase 1 Frontend
+
+The React rebuild lives in `frontend/`.
+
+Development mode:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Open `http://127.0.0.1:5173`. Vite proxies current Hub endpoints to `http://127.0.0.1:8765`.
+
+Production build through the existing Hub:
+
+```bash
+cd frontend
+npm run build
+python -m comment_analyzer.visualization.gallery
+```
+
+Open `http://127.0.0.1:8765/app`. The FastAPI Hub serves the built React SPA from `frontend/dist` while the old server-rendered pages remain available at the existing routes.

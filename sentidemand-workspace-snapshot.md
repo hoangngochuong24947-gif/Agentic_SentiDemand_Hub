@@ -1,0 +1,47 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - link "SentiDemand Hub comment intelligence workspace" [ref=e3] [cursor=pointer]:
+      - /url: /
+      - generic [ref=e4]: SentiDemand Hub
+      - generic [ref=e5]: comment intelligence workspace
+    - navigation [ref=e6]:
+      - link "主页" [ref=e7] [cursor=pointer]:
+        - /url: /
+      - link "工作台" [ref=e8] [cursor=pointer]:
+        - /url: /workspace
+      - link "旧版入口" [ref=e9] [cursor=pointer]:
+        - /url: /legacy
+  - main [ref=e10]:
+    - generic [ref=e11]:
+      - generic [ref=e12]:
+        - generic [ref=e13]: Workspace / Tables
+        - heading "表格工作台" [level=1] [ref=e14]
+        - paragraph [ref=e15]: 表格和日志信息在工作台管理，图表与建议在其他页面单独查看。
+      - generic [ref=e16]:
+        - link "回到主页" [ref=e17] [cursor=pointer]:
+          - /url: /
+        - link "旧版入口" [ref=e18] [cursor=pointer]:
+          - /url: /legacy
+    - generic [ref=e19]:
+      - complementary [ref=e20]:
+        - heading "运行列表" [level=2] [ref=e22]
+        - generic [ref=e23]:
+          - article [ref=e24]
+          - article [ref=e36]
+          - article [ref=e48]
+          - article [ref=e60]
+          - article [ref=e72]
+      - generic [ref=e84]:
+        - generic [ref=e85]:
+          - generic [ref=e86]
+          - generic [ref=e89]
+        - generic [ref=e93]:
+          - article [ref=e94]
+          - article [ref=e112]
+          - article [ref=e130]
+          - article [ref=e148]
+          - article [ref=e166]
+          - article [ref=e184]
+          - article [ref=e202]
+          - article [ref=e220]
+          - article [ref=e238]
