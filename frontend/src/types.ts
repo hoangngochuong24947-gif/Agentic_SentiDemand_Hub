@@ -56,6 +56,8 @@ export interface RunRecord {
   chart_failures?: string[];
   insight_status?: string;
   insight_updated_at?: string;
+  advice_markdown?: string;
+  structured_advice?: StructuredAdvice;
   insights?: RunArtifact[];
 }
 
@@ -65,7 +67,14 @@ export interface ManifestResponse {
   runs?: RunRecord[];
 }
 
+export type RunsResponse = ManifestResponse | RunRecord[];
+
+export interface RunResponse {
+  run?: RunRecord;
+}
+
 export interface UploadResponse {
+  job_id?: string;
   uploaded_file: string;
   run_id: string;
   status: string;
@@ -84,6 +93,37 @@ export interface UploadResponse {
   };
 }
 
+export interface AnalysisJobResponse {
+  job_id: string;
+  status: "queued" | "processing" | "completed" | "failed" | string;
+  run_id?: string;
+  kind?: string;
+  created_at?: string;
+  updated_at?: string;
+  progress?: number;
+  steps?: Array<string | AnalysisJobStep>;
+  message?: string;
+  result?: Record<string, unknown>;
+  error?: string | null;
+  cancellation_requested?: boolean;
+  retry_of?: string | null;
+}
+
+export interface AnalysisJobCancelResponse {
+  job_id: string;
+  status: string;
+  cancellation_requested?: boolean;
+  message?: string;
+}
+
+export interface AnalysisJobStep {
+  name?: string;
+  label?: string;
+  status?: string;
+  progress?: number;
+  message?: string;
+}
+
 export interface DeepSeekSessionResponse {
   session_id: string;
   masked_key: string;
@@ -95,7 +135,79 @@ export interface InsightResponse {
   insight_status: string;
   insight_updated_at?: string;
   advice_markdown?: string;
+  structured_advice?: StructuredAdvice;
   artifacts?: RunArtifact[];
+}
+
+export interface ExportResultsResponse {
+  run_id?: string;
+  status?: string;
+  message?: string;
+  path?: string;
+  open_url?: string;
+  download_url?: string;
+}
+
+export type StructuredAdviceSection =
+  | string
+  | string[]
+  | Array<{ title?: string; text?: string; detail?: string; rationale?: string; priority?: string }>;
+
+export interface StructuredAdvice {
+  findings?: StructuredAdviceSection;
+  actions?: StructuredAdviceSection;
+  risks?: StructuredAdviceSection;
+  context?: StructuredAdviceSection;
+  [section: string]: StructuredAdviceSection | undefined;
+}
+
+export type StructuredChartKind = "donut" | "bar" | "lollipop" | "radar" | "summary" | string;
+
+export interface StructuredChartPoint {
+  label?: string;
+  name?: string;
+  category?: string;
+  value?: number | string;
+  score?: number | string;
+  count?: number | string;
+  percent?: number | string;
+  [key: string]: unknown;
+}
+
+export interface StructuredChartSeries {
+  name?: string;
+  label?: string;
+  value?: number | string;
+  values?: Array<number | string>;
+  data?: StructuredChartPoint[] | Array<number | string>;
+  points?: StructuredChartPoint[];
+}
+
+export interface StructuredChartData {
+  id?: string;
+  chart_id?: string;
+  name?: string;
+  title?: string;
+  summary?: string;
+  kind?: StructuredChartKind;
+  type?: StructuredChartKind;
+  chart_type?: StructuredChartKind;
+  status?: ArtifactStatus | string;
+  labels?: string[];
+  values?: Array<number | string>;
+  data?: StructuredChartPoint[] | Record<string, unknown>;
+  points?: StructuredChartPoint[];
+  series?: StructuredChartSeries[];
+  metrics?: Record<string, unknown>;
+  open_url?: string;
+  download_url?: string;
+}
+
+export interface StructuredChartDataResponse {
+  run_id?: string;
+  charts?: StructuredChartData[];
+  chart_data?: StructuredChartData[];
+  data?: StructuredChartData[];
 }
 
 export interface RebuildStatus {

@@ -155,6 +155,24 @@ def _frontend_dist_dir() -> Path:
     return Path(__file__).resolve().parents[3] / "frontend" / "dist"
 
 
+def _include_api_v1_routes(app: Any, settings: Settings) -> None:
+    """Attach the stable API v1 routes to the Hub server when available."""
+
+    try:
+        from comment_analyzer.api.main import create_app as create_api_app
+    except Exception as exc:
+        logger.warning(f"API v1 routes are unavailable: {exc}")
+        return
+
+    api_app = create_api_app(settings)
+    existing_paths = {getattr(route, "path", "") for route in app.router.routes}
+    for route in api_app.router.routes:
+        path = getattr(route, "path", "")
+        if path.startswith("/api/v1") and path not in existing_paths:
+            app.router.routes.append(route)
+            existing_paths.add(path)
+
+
 def _ensure_safe_path(settings: Settings, raw_path: str) -> Path:
     if not raw_path:
         raise ValueError("Artifact path is empty")
@@ -604,6 +622,7 @@ def create_app(settings: Optional[Settings] = None) -> Any:
     app_settings.paths.ensure_directories()
     run_registry = _registry(app_settings)
     app = FastAPI(title="SentiDemand Visualization Gallery", version=_RUNS_VERSION)
+    _include_api_v1_routes(app, app_settings)
     frontend_dist = _frontend_dist_dir()
 
     def _frontend_index_response() -> Any:
