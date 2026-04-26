@@ -7,25 +7,290 @@
 
 ## English
 
-### React Frontend Rebuild
+### React Frontend Rebuild Current Status
 
-Phase 1 of the frontend rebuild lives in `frontend/` and uses Vite + React + TypeScript. During development, start the existing Hub backend on port `8765`, then run:
+The React rebuild is implemented under `frontend/` with Vite + React + TypeScript. The rebuilt app is served by the existing FastAPI Hub at `/app/`; the legacy Python-rendered pages are still kept for compatibility on older routes such as `/`.
+
+Current rebuild status:
+
+- Phase 1: React shell, routes, visual system, and legacy endpoint adapter are complete.
+- Phase 2: `/api/v1` is mounted, upload analysis is an async job, and React polls job progress.
+- Phase 3: structured chart data and structured advice are implemented, with legacy ECharts HTML and markdown fallback preserved.
+- Phase 4: JSON-backed storage adapter, zip export endpoint, job cancel primitives, React export/cancel UI, and Playwright smoke checks are complete enough for handoff.
+
+#### Start The React App Through FastAPI
 
 ```bash
+cd frontend
+npm install
+npm run build
+
+cd ..
+python -m comment_analyzer.visualization.gallery
+```
+
+Open:
+
+- React app: `http://127.0.0.1:8765/app/`
+- Legacy compatibility UI: `http://127.0.0.1:8765/`
+
+Use another port when `8765` is busy:
+
+```bash
+python -m comment_analyzer.visualization.gallery --port 8893
+```
+
+Then open `http://127.0.0.1:8893/app/`.
+
+#### Development Mode
+
+Run the Hub backend first, then run Vite:
+
+```bash
+python -m comment_analyzer.visualization.gallery --port 8765
+
 cd frontend
 npm install
 npm run dev
 ```
 
-The production build can be served by the existing FastAPI Hub at `/app`:
+The React API client prefers `/api/v1` and keeps legacy fallback where needed. Set `VITE_USE_API_V1=0` only when testing the old adapter path.
+
+#### Frontend Navigation And Text
+
+The React top navigation uses compact English labels:
+
+- `Upload`: upload and analyze a review/comment file.
+- `Runs`: view historical analysis runs.
+- `Tables`: inspect generated table previews and open/download artifacts.
+- `Charts`: view structured React-native chart cards and legacy chart files.
+- `Advice`: save a DeepSeek session key and generate decision advice.
+
+Primary action labels:
+
+- `Analyze`: submit the selected file for analysis.
+- `Cancel analysis`: request cancellation for queued/running upload jobs.
+- `Export`: create a zip package for the current run.
+- `Open export`: open/download the generated export package.
+- `Save`: save the DeepSeek key into the backend session.
+- `Generate`: generate AI advice for the current run.
+
+#### Upload File Workflow
+
+Supported upload extensions:
+
+- `.csv`
+- `.xlsx`
+- `.xls`
+- `.json`
+
+React upload behavior:
+
+1. Open `/app/`.
+2. Select or drop a file in the upload panel.
+3. Click `Analyze`.
+4. The frontend calls `POST /api/v1/data/upload`.
+5. The backend saves the upload, creates a job, and returns immediately with `job_id` and `status="queued"`.
+6. React polls `GET /api/v1/analysis/jobs/{job_id}`.
+7. The progress UI shows six stages: `Upload`, `Clean`, `Sentiment`, `Topics`, `Demand`, `Charts`.
+8. When the job completes, React navigates to `/app/workspace/{run_id}`.
+
+Cancellation note: `Cancel analysis` is cooperative. Queued jobs can be marked canceled; running jobs are marked cancel requested/canceling, but the current Python pipeline is not force-killed.
+
+#### Tables, Charts, Advice, And Export
+
+- Tables: `/app/workspace/{run_id}` shows table previews with horizontal scrolling for wide tables, plus open/download artifact actions.
+- Charts: `/app/dashboard/{run_id}` uses `GET /api/v1/runs/{run_id}/chart-data` for native React chart cards, while keeping legacy ECharts HTML artifacts visible.
+- Advice: `/app/insights/{run_id}` renders structured `Findings`, `Actions`, `Risks`, and `Context`; markdown remains as fallback/artifact.
+- Export: Workspace, Dashboard, and Run Detail include `Export`; it calls `POST /api/v1/export/results` and returns a downloadable zip with `manifest.json`.
+
+#### Key API Endpoints
+
+Current stable `/api/v1` endpoints:
+
+- `GET /api/v1/health`
+- `GET /api/v1/runs`
+- `GET /api/v1/runs/{run_id}`
+- `GET /api/v1/runs/{run_id}/tables`
+- `GET /api/v1/runs/{run_id}/charts`
+- `GET /api/v1/runs/{run_id}/chart-data`
+- `GET /api/v1/runs/{run_id}/logs`
+- `GET /api/v1/runs/{run_id}/insights`
+- `POST /api/v1/data/upload`
+- `POST /api/v1/analysis/run`
+- `GET /api/v1/analysis/jobs/{job_id}`
+- `POST /api/v1/analysis/jobs/{job_id}/cancel`
+- `POST /api/v1/runs/{run_id}/insights/generate`
+- `POST /api/v1/export/results`
+- `GET /api/v1/export/results/{export_id}/download`
+
+Legacy compatibility endpoints still available:
+
+- `GET /api/manifest`
+- `GET /api/runs/{run_id}`
+- `POST /upload`
+- `GET /runs/{run_id}/artifacts/{artifact_type}/{artifact_index}`
+- `GET /chart/{entry_id}`
+- `POST /api/session/deepseek-key`
+- `POST /api/runs/{run_id}/insights/generate`
+
+#### Verification
+
+Recommended verification after frontend/API changes:
+
+```bash
+python scripts/check_frontend_rebuild_docs.py
+PYTHONPATH=src pytest tests/test_api_v1.py tests/test_visualization.py tests/test_run_registry.py
+cd frontend && npm run typecheck
+cd frontend && npm run build
+```
+
+Recent Playwright smoke screenshots are written under:
+
+- `docs/frontend_rebuild_screenshots/playwright-upload-smoke.png`
+- `docs/frontend_rebuild_screenshots/playwright-workspace-smoke.png`
+- `docs/frontend_rebuild_screenshots/playwright-dashboard-smoke.png`
+- `docs/frontend_rebuild_screenshots/playwright-insights-mobile-smoke.png`
+- `docs/frontend_rebuild_screenshots/playwright-detail-smoke.png`
+
+## 中文使用教程（React 重构版）
+
+当前新版前端已经重构为 Vite + React + TypeScript，代码在 `frontend/`。FastAPI Hub 会在 `/app/` 挂载新版 React 前端；旧版 Python 页面仍保留在 `/` 等旧路由，作为兼容入口。
+
+### 1. 启动新版前端
+
+先构建 React，再启动 Hub：
 
 ```bash
 cd frontend
+npm install
 npm run build
+
+cd ..
 python -m comment_analyzer.visualization.gallery
 ```
 
-Then open `http://127.0.0.1:8765/app`.
+打开：
+
+- 新版 React 前端：`http://127.0.0.1:8765/app/`
+- 旧版兼容页面：`http://127.0.0.1:8765/`
+
+如果 `8765` 端口被占用，可以指定其他端口：
+
+```bash
+python -m comment_analyzer.visualization.gallery --port 8893
+```
+
+然后打开 `http://127.0.0.1:8893/app/`。
+
+开发模式：
+
+```bash
+python -m comment_analyzer.visualization.gallery --port 8765
+
+cd frontend
+npm install
+npm run dev
+```
+
+React 默认优先调用 `/api/v1`。只有测试旧接口适配时，才需要设置 `VITE_USE_API_V1=0`。
+
+### 2. 前端页面与按钮说明
+
+顶部导航：
+
+- `Upload`：上传评论/评价文件并开始分析。
+- `Runs`：查看历史分析任务。
+- `Tables`：查看生成表格、预览数据、打开或下载 artifact。
+- `Charts`：查看结构化 React 图表，并保留旧 ECharts HTML 图表文件。
+- `Advice`：保存 DeepSeek session key，并生成决策建议。
+
+主要按钮：
+
+- `Analyze`：提交当前选择的文件并开始分析。
+- `Cancel analysis`：请求取消排队中或运行中的分析任务。
+- `Export`：把当前 run 的结果打包成 zip。
+- `Open export`：打开或下载已经生成的导出包。
+- `Save`：把 DeepSeek key 保存到后端 session。
+- `Generate`：为当前 run 生成 AI 建议。
+
+### 3. 上传文件处理流程
+
+支持上传：
+
+- `.csv`
+- `.xlsx`
+- `.xls`
+- `.json`
+
+操作步骤：
+
+1. 打开 `/app/`。
+2. 在上传区域选择或拖入文件。
+3. 点击 `Analyze`。
+4. 前端调用 `POST /api/v1/data/upload`。
+5. 后端保存文件，创建后台 job，并立即返回 `job_id` 和 `status="queued"`。
+6. 前端轮询 `GET /api/v1/analysis/jobs/{job_id}`。
+7. 上传进度会显示六个阶段：`Upload`、`Clean`、`Sentiment`、`Topics`、`Demand`、`Charts`。
+8. 分析完成后，页面自动跳转到 `/app/workspace/{run_id}`。
+
+取消说明：`Cancel analysis` 目前是协作式取消。排队中的任务可以标记为 canceled；已经运行中的任务会标记为 cancel requested/canceling，但不会强制杀掉正在执行的 Python pipeline。
+
+### 4. 表格、图表、建议与导出
+
+- 表格页：`/app/workspace/{run_id}`，用于查看表格预览。宽表会横向滚动，避免内容被挤成竖排。
+- 图表页：`/app/dashboard/{run_id}`，优先使用 `GET /api/v1/runs/{run_id}/chart-data` 渲染 React 原生图表，同时保留旧 HTML 图表文件。
+- 建议页：`/app/insights/{run_id}`，优先显示结构化 `Findings`、`Actions`、`Risks`、`Context`，markdown 仍作为 fallback/artifact 保留。
+- 导出：Workspace、Dashboard、Run Detail 页面都有 `Export`。点击后调用 `POST /api/v1/export/results`，生成包含 `manifest.json` 的 zip 包。
+
+### 5. 关键接口
+
+当前稳定 `/api/v1` 接口：
+
+- `GET /api/v1/health`
+- `GET /api/v1/runs`
+- `GET /api/v1/runs/{run_id}`
+- `GET /api/v1/runs/{run_id}/tables`
+- `GET /api/v1/runs/{run_id}/charts`
+- `GET /api/v1/runs/{run_id}/chart-data`
+- `GET /api/v1/runs/{run_id}/logs`
+- `GET /api/v1/runs/{run_id}/insights`
+- `POST /api/v1/data/upload`
+- `POST /api/v1/analysis/run`
+- `GET /api/v1/analysis/jobs/{job_id}`
+- `POST /api/v1/analysis/jobs/{job_id}/cancel`
+- `POST /api/v1/runs/{run_id}/insights/generate`
+- `POST /api/v1/export/results`
+- `GET /api/v1/export/results/{export_id}/download`
+
+旧接口仍保留兼容：
+
+- `GET /api/manifest`
+- `GET /api/runs/{run_id}`
+- `POST /upload`
+- `GET /runs/{run_id}/artifacts/{artifact_type}/{artifact_index}`
+- `GET /chart/{entry_id}`
+- `POST /api/session/deepseek-key`
+- `POST /api/runs/{run_id}/insights/generate`
+
+### 6. 验证命令
+
+前端或 API 改动后建议运行：
+
+```bash
+python scripts/check_frontend_rebuild_docs.py
+PYTHONPATH=src pytest tests/test_api_v1.py tests/test_visualization.py tests/test_run_registry.py
+cd frontend && npm run typecheck
+cd frontend && npm run build
+```
+
+最近的 Playwright 截图保存在：
+
+- `docs/frontend_rebuild_screenshots/playwright-upload-smoke.png`
+- `docs/frontend_rebuild_screenshots/playwright-workspace-smoke.png`
+- `docs/frontend_rebuild_screenshots/playwright-dashboard-smoke.png`
+- `docs/frontend_rebuild_screenshots/playwright-insights-mobile-smoke.png`
+- `docs/frontend_rebuild_screenshots/playwright-detail-smoke.png`
 
 ### 1. What This Project Is
 
