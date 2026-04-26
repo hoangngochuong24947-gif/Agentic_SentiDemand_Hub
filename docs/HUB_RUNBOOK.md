@@ -74,3 +74,66 @@ python -m comment_analyzer.visualization.gallery
 ```
 
 Open `http://127.0.0.1:8765/app`. The FastAPI Hub serves the built React SPA from `frontend/dist` while the old server-rendered pages remain available at the existing routes.
+
+# React Phase 2 Closure
+
+Phase 2 is complete:
+
+- `/api/v1` is mounted into the existing Hub while legacy routes remain available.
+- `/api/v1/data/upload` returns a queued job and React polls `/api/v1/analysis/jobs/{job_id}` before navigating to the completed run.
+- Stable JSON exists for runs, artifacts, charts, tables, logs, insights, downloads, and errors, with legacy fallback preserved.
+
+Minimum verification target for Phase 2 changes:
+
+```bash
+python scripts/check_frontend_rebuild_docs.py
+PYTHONPATH=src pytest tests/test_visualization.py tests/test_run_registry.py
+cd frontend && npm run typecheck
+cd frontend && npm run build
+```
+
+Next: continue Phase 4 storage, export, session hardening prep, and job-control work.
+
+# React Phase 3 Verification
+
+Phase 3 is complete enough for Phase 4 handoff:
+
+- Browser verification covered the built React app and representative desktop/mobile routes.
+- Chart payloads expose stable structured data for React-native chart cards while keeping legacy HTML artifact references.
+- Generated advice can be presented as Findings, Actions, Risks, and supporting context, with markdown/plain text fallback.
+- Documentation/memory worker: keep rebuild docs, README, and this runbook current without changing source.
+
+Verification target:
+
+```bash
+python scripts/check_frontend_rebuild_docs.py
+PYTHONPATH=src pytest tests/test_api_v1.py tests/test_visualization.py tests/test_run_registry.py
+cd frontend && npm run typecheck
+cd frontend && npm run build
+```
+
+Browser smoke setup:
+
+```bash
+python -m comment_analyzer.visualization.gallery
+cd frontend && npm run dev
+```
+
+Principle: keep iframe fallback for existing ECharts HTML artifacts. Structured chart data should improve React route rendering, but existing chart HTML must remain openable and embeddable until replacement rendering is complete.
+
+# React Phase 4 Active Work
+
+Phase 4 is active:
+
+- Backend/API worker: storage abstraction, `POST /api/v1/export/results`, DeepSeek/session hardening prep, local concurrency limits, cancel status, and retry-friendly failed/canceled job states.
+- Frontend worker: export and cancel/control UI once the Phase 4 API contracts are available.
+- Documentation/memory worker: record progress and verification only; do not edit frontend/backend source.
+
+Verification is pending for Phase 4 source behavior. Target commands:
+
+```bash
+python scripts/check_frontend_rebuild_docs.py
+PYTHONPATH=src pytest tests/test_api_v1.py tests/test_visualization.py tests/test_run_registry.py
+cd frontend && npm run typecheck
+cd frontend && npm run build
+```
