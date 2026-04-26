@@ -1,15 +1,24 @@
 import type {
   ApiHealth,
+  AnalysisJobCancelResponse,
+  AnalysisJobResponse,
   DeepSeekSessionResponse,
+  ExportResultsResponse,
   InsightResponse,
-  ManifestResponse,
   RebuildStatus,
   RunArtifact,
   RunRecord,
+  RunResponse,
+  RunsResponse,
+  StructuredChartData,
+  StructuredChartDataResponse,
   UploadResponse
 } from "./types";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "";
+const USE_API_V1 = !["0", "false", "off"].includes(
+  String(import.meta.env.VITE_USE_API_V1 ?? "true").toLowerCase()
+);
 
 export class ApiError extends Error {
   status: number;
@@ -43,6 +52,24 @@ async function request<TResponse>(path: string, init?: RequestInit): Promise<TRe
   }
 
   return payload as TResponse;
+}
+
+async function requestWithV1Fallback<TResponse>(
+  v1Path: string,
+  legacyPath: string,
+  init?: RequestInit | (() => RequestInit)
+): Promise<TResponse> {
+  const makeInit = () => (typeof init === "function" ? init() : init);
+
+  if (!USE_API_V1) {
+    return request<TResponse>(legacyPath, makeInit());
+  }
+
+  try {
+    return await request<TResponse>(v1Path, makeInit());
+  } catch {
+    return request<TResponse>(legacyPath, makeInit());
+  }
 }
 
 function withJson(body: unknown): RequestInit {
@@ -80,38 +107,112 @@ function normalizeRun(raw: RunRecord): RunRecord {
   };
 }
 
+function normalizeRunsResponse(payload: RunsResponse): RunRecord[] {
+  const runs = Array.isArray(payload) ? payload : payload.runs ?? [];
+  return runs.map(normalizeRun);
+}
+
+function normalizeRunResponse(payload: RunRecord | RunResponse): RunRecord {
+  return normalizeRun("run" in payload && payload.run ? payload.run : (payload as RunRecord));
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+function normalizeStructuredChartData(payload: StructuredChartDataResponse | StructuredChartData[] | unknown): StructuredChartData[] {
+  if (Array.isArray(payload)) {
+    return payload.filter(isRecord) as StructuredChartData[];
+  }
+  if (!isRecord(payload)) return [];
+
+  const candidates = [payload.charts, payload.chart_data, payload.data];
+  const list = candidates.find(Array.isArray);
+  if (Array.isArray(list)) {
+    return list.filter(isRecord) as StructuredChartData[];
+  }
+
+  if ("kind" in payload || "chart_type" in payload || "type" in payload) {
+    return [payload as StructuredChartData];
+  }
+  return [];
+}
+
 export const api = {
-  health: async (): Promise<ApiHealth> => ({
-    status: "ok",
-    service: "SentiDemand Hub",
-    version: "phase-1",
-    checkedAt: new Date().toISOString()
-  }),
+  health: async (): Promise<ApiHealth> => {
+    if (USE_API_V1) {
+      try {
+        return {
+          ...(await request<ApiHealth>("/api/v1/health")),
+          checkedAt: new Date().toISOString()
+        };
+      } catch {
+        // Fall through to the legacy health approximation below.
+      }
+    }
+    await request<unknown>("/api/manifest");
+    return {
+      status: "ok",
+      service: "SentiDemand Hub",
+      version: "legacy",
+      checkedAt: new Date().toISOString()
+    };
+  },
 
   listRuns: async (): Promise<RunRecord[]> => {
-    const payload = await request<ManifestResponse>("/api/manifest");
-    return (payload.runs ?? []).map(normalizeRun);
+    const payload = await requestWithV1Fallback<RunsResponse>("/api/v1/runs", "/api/manifest");
+    return normalizeRunsResponse(payload);
   },
 
   getRun: async (runId: string): Promise<RunRecord> => {
-    const payload = await request<RunRecord>(`/api/runs/${encodeURIComponent(runId)}`);
-    return normalizeRun(payload);
+    const encodedRunId = encodeURIComponent(runId);
+    const payload = await requestWithV1Fallback<RunRecord | RunResponse>(
+      `/api/v1/runs/${encodedRunId}`,
+      `/api/runs/${encodedRunId}`
+    );
+    return normalizeRunResponse(payload);
   },
 
   uploadRun: async (file: File): Promise<UploadResponse> => {
-    const form = new FormData();
-    form.append("file", file);
-    return request<UploadResponse>("/upload", {
-      method: "POST",
-      body: form
+    return requestWithV1Fallback<UploadResponse>("/api/v1/data/upload", "/upload", () => {
+      const form = new FormData();
+      form.append("file", file);
+      return {
+        method: "POST",
+        body: form
+      };
     });
+  },
+
+  getAnalysisJob: async (jobId: string): Promise<AnalysisJobResponse> =>
+    request<AnalysisJobResponse>(`/api/v1/analysis/jobs/${encodeURIComponent(jobId)}`),
+
+  cancelAnalysisJob: async (jobId: string): Promise<AnalysisJobCancelResponse> =>
+    request<AnalysisJobCancelResponse>(`/api/v1/analysis/jobs/${encodeURIComponent(jobId)}/cancel`, {
+      method: "POST"
+    }),
+
+  exportResults: async (runId: string): Promise<ExportResultsResponse> =>
+    request<ExportResultsResponse>("/api/v1/export/results", withJson({ run_id: runId })),
+
+  getRunChartData: async (runId: string): Promise<StructuredChartData[]> => {
+    if (!USE_API_V1) return [];
+    try {
+      const payload = await request<StructuredChartDataResponse | StructuredChartData[]>(
+        `/api/v1/runs/${encodeURIComponent(runId)}/chart-data`
+      );
+      return normalizeStructuredChartData(payload);
+    } catch {
+      return [];
+    }
   },
 
   saveDeepSeekKey: async (apiKey: string): Promise<DeepSeekSessionResponse> =>
     request<DeepSeekSessionResponse>("/api/session/deepseek-key", withJson({ api_key: apiKey })),
 
   generateInsight: async (runId: string, sessionId: string): Promise<InsightResponse> =>
-    request<InsightResponse>(
+    requestWithV1Fallback<InsightResponse>(
+      `/api/v1/runs/${encodeURIComponent(runId)}/insights/generate`,
       `/api/runs/${encodeURIComponent(runId)}/insights/generate`,
       withJson({ session_id: sessionId })
     ),

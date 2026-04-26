@@ -7,6 +7,7 @@ export default defineConfig({
   server: {
     port: 5173,
     proxy: {
+      // Covers both current /api routes and Phase 2 /api/v1 routes.
       "/api": {
         target: "http://127.0.0.1:8765",
         changeOrigin: true

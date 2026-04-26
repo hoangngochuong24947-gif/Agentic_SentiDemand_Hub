@@ -8,6 +8,9 @@ export const queryKeys = {
   health: ["health"] as const,
   runs: ["runs"] as const,
   run: (runId: string) => ["runs", runId] as const,
+  runChartData: (runId: string) => ["runs", runId, "chartData"] as const,
+  analysisJob: (jobId: string) => ["analysisJob", jobId] as const,
+  exportResults: (runId: string) => ["runs", runId, "export"] as const,
   rebuildStatus: ["rebuildStatus"] as const
 };
 
@@ -46,6 +49,15 @@ export function useRunCharts(runId?: string) {
   return { ...run, data: charts, run: run.data };
 }
 
+export function useStructuredRunCharts(runId?: string) {
+  return useQuery({
+    queryKey: queryKeys.runChartData(runId ?? ""),
+    queryFn: () => api.getRunChartData(runId ?? ""),
+    enabled: Boolean(runId),
+    retry: false
+  });
+}
+
 export function useRunLogs(runId?: string) {
   const run = useRun(runId);
   const logs = useMemo(() => getArtifactGroups(run.data).logs, [run.data]);
@@ -60,6 +72,39 @@ export function useUploadRun() {
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: queryKeys.runs });
     }
+  });
+}
+
+export function useAnalysisJob(jobId?: string) {
+  return useQuery({
+    queryKey: queryKeys.analysisJob(jobId ?? ""),
+    queryFn: () => api.getAnalysisJob(jobId ?? ""),
+    enabled: Boolean(jobId),
+    refetchInterval: (query) => {
+      const status = query.state.data?.status;
+      return status === "completed" || status === "failed" ? false : 1200;
+    },
+    retry: 2
+  });
+}
+
+export function useCancelAnalysisJob(jobId?: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: () => api.cancelAnalysisJob(jobId ?? ""),
+    onSuccess: async () => {
+      if (jobId) {
+        await queryClient.invalidateQueries({ queryKey: queryKeys.analysisJob(jobId) });
+      }
+    }
+  });
+}
+
+export function useExportResults(runId?: string) {
+  return useMutation({
+    mutationKey: queryKeys.exportResults(runId ?? ""),
+    mutationFn: () => api.exportResults(runId ?? "")
   });
 }
 
@@ -99,9 +144,10 @@ export function useRebuildProgress() {
 
 export function useFeatureFlag(name: string) {
   const flags: Record<string, boolean> = {
+    apiV1: !["0", "false", "off"].includes(String(import.meta.env.VITE_USE_API_V1 ?? "true").toLowerCase()),
     iframeCharts: true,
     asyncUpload: false,
-    structuredAdvice: false
+    structuredAdvice: true
   };
   return Boolean(flags[name]);
 }
