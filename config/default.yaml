@@ -1,0 +1,124 @@
+# Comment Analyzer Default Configuration
+
+data:
+  platform: generic
+  language: zh
+  text_column_keywords:
+    - content
+    - comment
+    - review
+    - text
+    - 评论
+    - 内容
+    - 评价
+    - 리뷰
+    - 후기
+  rating_column_keywords:
+    - rating
+    - score
+    - star
+    - 评分
+    - 星级
+    - 평점
+  date_column_keywords:
+    - date
+    - time
+    - created
+    - 时间
+    - 日期
+    - 작성일
+
+preprocessing:
+  clean:
+    remove_urls: true
+    remove_emails: true
+    remove_html: true
+    remove_extra_spaces: true
+    normalize_whitespace: true
+  segmentation:
+    mode: precise
+    backend: auto
+    custom_dict_path: null
+  stopwords:
+    use_default: true
+    custom_path: null
+    extra_words: []
+
+sentiment:
+  labeling_method: auto
+  snownlp:
+    threshold_positive: 0.6
+    threshold_negative: 0.4
+  balance:
+    enabled: true
+    method: undersample
+    random_state: 42
+  tfidf:
+    max_features: 5000
+    min_df: 2
+    max_df: 0.95
+    ngram_range: [1, 2]
+  models:
+    naive_bayes:
+      enabled: true
+      alpha: 1.0
+    svm:
+      enabled: true
+      kernel: linear
+      C: 1.0
+    logistic_regression:
+      enabled: true
+      C: 1.0
+      max_iter: 1000
+
+topic:
+  keywords:
+    method: tfidf
+    top_k: 20
+  lda:
+    num_topics: 5
+    passes: 15
+    iterations: 100
+    alpha: auto
+    eta: auto
+    random_state: 42
+
+demand:
+  intensity:
+    method: tfidf_weighted
+    normalization: minmax
+  correlation:
+    method: cooccurrence
+    min_cooccurrence: 2
+    window_size: 50
+
+output:
+  save_intermediate: false
+  encoding: utf-8
+  float_format: "%.4f"
+
+paths:
+  output_base: "./outputs"
+  visualization_base: "~/.sentidemand/outputs"
+  upload_dir: "~/.sentidemand/uploads"
+
+visualization:
+  theme: dark
+  locale: zh-CN
+  auto_open_browser: true
+  gallery_port: 8765
+  charts:
+    sentiment_donut: true
+    sentiment_wordcloud: true
+    sentiment_distribution: true
+    sentiment_scatter: true
+    features_bidirectional: true
+    features_lollipop: true
+    features_heatmap: true
+    features_tfidf_scatter: true
+    topics_nightingale: true
+    topics_bubble: true
+    topics_radar: true
+    demand_funnel: true
+    demand_network: true
+    demand_dashboard: true

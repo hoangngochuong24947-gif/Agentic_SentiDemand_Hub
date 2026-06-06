@@ -1,0 +1,17 @@
+data:
+  language: ko
+  text_column_keywords:
+    - comment
+    - review
+    - 리뷰
+    - 후기
+
+preprocessing:
+  segmentation:
+    backend: okt
+
+sentiment:
+  labeling_method: lexicon
+
+output:
+  save_intermediate: true

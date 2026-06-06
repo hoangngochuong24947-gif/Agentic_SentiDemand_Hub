@@ -1,0 +1,125 @@
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - link "SentiDemand home" [ref=e5] [cursor=pointer]:
+      - /url: /app
+      - img [ref=e6]
+      - generic [ref=e9]: SentiDemand
+    - navigation "Primary navigation" [ref=e10]:
+      - link "Upload" [ref=e11] [cursor=pointer]:
+        - /url: /app
+        - img [ref=e12]
+        - generic [ref=e15]: Upload
+      - link "Runs" [ref=e16] [cursor=pointer]:
+        - /url: /app/runs
+        - img [ref=e17]
+        - generic [ref=e20]: Runs
+      - link "Tables" [ref=e21] [cursor=pointer]:
+        - /url: /app/workspace
+        - img [ref=e22]
+        - generic [ref=e25]: Tables
+      - link "Charts" [ref=e26] [cursor=pointer]:
+        - /url: /app/dashboard/latest
+        - img [ref=e27]
+        - generic [ref=e29]: Charts
+      - link "Advice" [ref=e30] [cursor=pointer]:
+        - /url: /app/insights/latest
+        - img [ref=e31]
+        - generic [ref=e41]: Advice
+  - main [ref=e42]:
+    - generic [ref=e43]:
+      - generic [ref=e44]:
+        - generic [ref=e45]: Upload
+        - heading "SentiDemand" [level=1] [ref=e46]
+        - paragraph [ref=e47]: Review intelligence command center.
+      - generic [ref=e49]: Phase 1
+    - generic [ref=e50]:
+      - generic [ref=e51]:
+        - generic [ref=e52] [cursor=pointer]:
+          - img [ref=e53]
+          - generic [ref=e56]: Drop or select
+          - generic [ref=e57]: CSV XLSX XLS JSON
+        - button "Analyze" [disabled] [ref=e58]
+      - generic [ref=e59]:
+        - generic [ref=e60]:
+          - heading "Recent Runs" [level=2] [ref=e61]
+          - link "All" [ref=e62] [cursor=pointer]:
+            - /url: /app/runs
+        - generic [ref=e63]:
+          - article [ref=e64]:
+            - generic [ref=e65]:
+              - generic [ref=e66]: completed
+              - heading "20260423_153511_korean_reviews_mock.csv" [level=3] [ref=e67]
+              - text: 2026-04-23T15:35:12.391515
+            - generic [ref=e68]:
+              - link "Tables" [ref=e69] [cursor=pointer]:
+                - /url: /app/workspace/6fb0fd8ddf0b
+              - link "Charts" [ref=e70] [cursor=pointer]:
+                - /url: /app/dashboard/6fb0fd8ddf0b
+              - link "Advice" [ref=e71] [cursor=pointer]:
+                - /url: /app/insights/6fb0fd8ddf0b
+          - article [ref=e72]:
+            - generic [ref=e73]:
+              - generic [ref=e74]: completed
+              - heading "20260322_203501_jd_reviews_005.csv" [level=3] [ref=e75]
+              - text: 2026-03-22T20:35:09.730075
+            - generic [ref=e76]:
+              - link "Tables" [ref=e77] [cursor=pointer]:
+                - /url: /app/workspace/099e576e77e9
+              - link "Charts" [ref=e78] [cursor=pointer]:
+                - /url: /app/dashboard/099e576e77e9
+              - link "Advice" [ref=e79] [cursor=pointer]:
+                - /url: /app/insights/099e576e77e9
+          - article [ref=e80]:
+            - generic [ref=e81]:
+              - generic [ref=e82]: completed
+              - heading "20260319_133854_jd_reviews_merged.csv" [level=3] [ref=e83]
+              - text: 2026-03-19T13:39:51.252663
+            - generic [ref=e84]:
+              - link "Tables" [ref=e85] [cursor=pointer]:
+                - /url: /app/workspace/33a7a673fcea
+              - link "Charts" [ref=e86] [cursor=pointer]:
+                - /url: /app/dashboard/33a7a673fcea
+              - link "Advice" [ref=e87] [cursor=pointer]:
+                - /url: /app/insights/33a7a673fcea
+          - article [ref=e88]:
+            - generic [ref=e89]:
+              - generic [ref=e90]: completed
+              - heading "20260318_202856_jd_reviews_merged.csv" [level=3] [ref=e91]
+              - text: 2026-03-18T20:29:31.650703
+            - generic [ref=e92]:
+              - link "Tables" [ref=e93] [cursor=pointer]:
+                - /url: /app/workspace/4f934c5ff9e2
+              - link "Charts" [ref=e94] [cursor=pointer]:
+                - /url: /app/dashboard/4f934c5ff9e2
+              - link "Advice" [ref=e95] [cursor=pointer]:
+                - /url: /app/insights/4f934c5ff9e2
+    - generic [ref=e96]:
+      - article [ref=e97]:
+        - img [ref=e98]
+        - generic [ref=e101]: Runs
+        - strong [ref=e102]: "5"
+      - article [ref=e103]:
+        - img [ref=e104]
+        - generic [ref=e107]: Tables
+        - strong [ref=e108]: "9"
+      - article [ref=e109]:
+        - img [ref=e110]
+        - generic [ref=e112]: Charts
+        - strong [ref=e113]: "9"
+      - article [ref=e114]:
+        - img [ref=e115]
+        - generic [ref=e125]: Advice
+        - strong [ref=e126]: not_generated
+    - article [ref=e127]:
+      - generic [ref=e128]:
+        - generic [ref=e129]:
+          - img [ref=e130]
+          - strong [ref=e132]: Phase 1
+        - generic [ref=e133]: in_progress
+      - progressbar [ref=e134]
+      - paragraph [ref=e136]: React shell is connected to the current Hub endpoints.
+      - generic [ref=e137]: "Next: Finish route screens, verify build, then begin /api/v1 extraction."
+    - generic [ref=e138]:
+      - article [ref=e139]: Bilibili
+      - article [ref=e140]: JD
+      - article [ref=e141]: Chrome

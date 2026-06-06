@@ -1,0 +1,155 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - link "SentiDemand Hub comment intelligence workspace" [ref=e3] [cursor=pointer]:
+      - /url: /
+      - generic [ref=e4]: SentiDemand Hub
+      - generic [ref=e5]: comment intelligence workspace
+    - navigation [ref=e6]:
+      - link "主页" [ref=e7] [cursor=pointer]:
+        - /url: /
+      - link "工作台" [ref=e8] [cursor=pointer]:
+        - /url: /workspace
+      - link "旧版入口" [ref=e9] [cursor=pointer]:
+        - /url: /legacy
+  - main [ref=e10]:
+    - generic [ref=e11]:
+      - generic [ref=e12]:
+        - generic [ref=e13]: SentiDemand Hub v2
+        - heading "上传评论后，表格、图表、建议分页面查看" [level=1] [ref=e14]
+        - paragraph [ref=e15]: 这版工作流分成四个独立页面：主页上传、工作台表格、仪表盘图表、建议页输出。页面之间支持一键切换，避免信息堆在同一页。
+        - generic [ref=e16]:
+          - button "上传并分析" [ref=e17] [cursor=pointer]
+          - link "进入工作台" [ref=e18] [cursor=pointer]:
+            - /url: /workspace
+          - link "查看旧版" [ref=e19] [cursor=pointer]:
+            - /url: /legacy
+        - paragraph [ref=e20]: 支持 CSV / XLSX / XLS / JSON
+      - generic [ref=e21]:
+        - generic [ref=e22]: Upload 评论数据
+        - generic [ref=e23]: 结构化表格输出
+        - generic [ref=e24]: 图表仪表盘拆分
+        - generic [ref=e25]: DeepSeek 结论建议
+        - generic [ref=e26]: 旧版并行入口
+    - generic [ref=e27]:
+      - article [ref=e28]:
+        - text: Step 1
+        - heading "上传数据并触发分析" [level=2] [ref=e29]
+        - paragraph [ref=e30]: 上传后系统会自动运行清洗、情感、主题和需求分析，并生成可追溯的 run 记录。
+      - article [ref=e31]:
+        - text: Step 2
+        - heading "工作台查看表格" [level=2] [ref=e32]
+        - paragraph [ref=e33]: 表格输出单独在工作台展示，支持下载和结构化预览，不再和图表混排。
+      - article [ref=e34]:
+        - text: Step 3
+        - heading "仪表盘查看可视化" [level=2] [ref=e35]
+        - paragraph [ref=e36]: 图表集中在仪表盘页面，支持嵌入预览、独立打开和下载，缺失图表会明确标记原因。
+      - article [ref=e37]:
+        - text: Step 4
+        - heading "建议页手动生成结论" [level=2] [ref=e38]
+        - paragraph [ref=e39]: 在建议页手动触发 DeepSeek，总结关键指标并输出行动建议，结果落盘到 insights 目录。
+    - generic [ref=e40]:
+      - generic [ref=e41]:
+        - generic [ref=e42]:
+          - text: Recent Runs
+          - heading "最近运行" [level=2] [ref=e43]
+        - link "查看全部" [ref=e44] [cursor=pointer]:
+          - /url: /workspace
+      - generic [ref=e45]:
+        - article [ref=e46]:
+          - generic [ref=e47]:
+            - generic [ref=e48]: completed
+            - generic [ref=e49]: 2026-04-23T15:35:12.391515
+          - heading "20260423_153511_korean_reviews_mock.csv" [level=3] [ref=e50]
+          - paragraph [ref=e51]: 20260423_153511_korean_reviews_mock.csv
+          - paragraph [ref=e52]: 上传成功，分析完成。可查看表格、仪表盘和建议页。
+          - generic [ref=e53]:
+            - link "表格" [ref=e54] [cursor=pointer]:
+              - /url: /workspace/6fb0fd8ddf0b
+            - link "仪表盘" [ref=e55] [cursor=pointer]:
+              - /url: /dashboard/6fb0fd8ddf0b
+            - link "建议" [ref=e56] [cursor=pointer]:
+              - /url: /insights/6fb0fd8ddf0b
+            - link "旧版" [ref=e57] [cursor=pointer]:
+              - /url: /runs/6fb0fd8ddf0b
+        - article [ref=e58]:
+          - generic [ref=e59]:
+            - generic [ref=e60]: completed
+            - generic [ref=e61]: 2026-03-22T20:35:09.730075
+          - heading "20260322_203501_jd_reviews_005.csv" [level=3] [ref=e62]
+          - paragraph [ref=e63]: 20260322_203501_jd_reviews_005.csv
+          - paragraph [ref=e64]: 上传成功，分析完成。可查看表格、仪表盘和建议页。
+          - generic [ref=e65]:
+            - link "表格" [ref=e66] [cursor=pointer]:
+              - /url: /workspace/099e576e77e9
+            - link "仪表盘" [ref=e67] [cursor=pointer]:
+              - /url: /dashboard/099e576e77e9
+            - link "建议" [ref=e68] [cursor=pointer]:
+              - /url: /insights/099e576e77e9
+            - link "旧版" [ref=e69] [cursor=pointer]:
+              - /url: /runs/099e576e77e9
+        - article [ref=e70]:
+          - generic [ref=e71]:
+            - generic [ref=e72]: completed
+            - generic [ref=e73]: 2026-03-19T13:39:51.252663
+          - heading "20260319_133854_jd_reviews_merged.csv" [level=3] [ref=e74]
+          - paragraph [ref=e75]: 20260319_133854_jd_reviews_merged.csv
+          - paragraph [ref=e76]: 上传成功，已生成派生表格、日志和图表。
+          - generic [ref=e77]:
+            - link "表格" [ref=e78] [cursor=pointer]:
+              - /url: /workspace/33a7a673fcea
+            - link "仪表盘" [ref=e79] [cursor=pointer]:
+              - /url: /dashboard/33a7a673fcea
+            - link "建议" [ref=e80] [cursor=pointer]:
+              - /url: /insights/33a7a673fcea
+            - link "旧版" [ref=e81] [cursor=pointer]:
+              - /url: /runs/33a7a673fcea
+    - generic [ref=e82]:
+      - generic [ref=e84]:
+        - text: Crawler Guidance
+        - heading "采集脚本说明" [level=2] [ref=e85]
+      - generic [ref=e86]:
+        - article [ref=e87]:
+          - text: Crawler 01
+          - heading "Bilibili 评论抓取" [level=3] [ref=e88]
+          - paragraph [ref=e89]: exp1_bilibili_requests.py
+          - paragraph [ref=e90]: 用于批量抓取 B 站视频评论，先形成可上传的原始评论表。
+          - generic [ref=e91]:
+            - text: 输入
+            - paragraph [ref=e92]: 视频链接或 BV 号, 分页范围, 抓取数量上限
+          - generic [ref=e93]:
+            - text: 输出
+            - paragraph [ref=e94]: 原始评论 CSV, 请求日志, 异常样本记录
+          - list [ref=e95]:
+            - listitem [ref=e96]: 先用小样本测试列名是否齐全。
+            - listitem [ref=e97]: 确认导出的文件里存在评论正文列。
+            - listitem [ref=e98]: 把导出的 CSV 直接上传到 Hub 进行分析。
+        - article [ref=e99]:
+          - text: Crawler 02
+          - heading "京东评论抓取" [level=3] [ref=e100]
+          - paragraph [ref=e101]: exp2_jd_reviews_connect.py
+          - paragraph [ref=e102]: 用于抓取京东商品评论，生成标准化评论数据供后续分析。
+          - generic [ref=e103]:
+            - text: 输入
+            - paragraph [ref=e104]: 商品链接或 SKU, 时间窗口, 批次参数
+          - generic [ref=e105]:
+            - text: 输出
+            - paragraph [ref=e106]: 评论明细表, 请求状态日志, 失败重试清单
+          - list [ref=e107]:
+            - listitem [ref=e108]: 先确认商品链接可正常访问。
+            - listitem [ref=e109]: 检查评论文本、评分、时间列是否完整。
+            - listitem [ref=e110]: 导出的表格可直接上传到 Hub。
+        - article [ref=e111]:
+          - text: Crawler 03
+          - heading "Chrome 调试会话" [level=3] [ref=e112]
+          - paragraph [ref=e113]: start_chrome.ps1
+          - paragraph [ref=e114]: 在需要登录态或页面调试时先准备浏览器环境，再配合采集脚本。
+          - generic [ref=e115]:
+            - text: 输入
+            - paragraph [ref=e116]: 本地 Chrome, 远程调试端口, 登录态
+          - generic [ref=e117]:
+            - text: 输出
+            - paragraph [ref=e118]: 复用浏览器会话, 调试入口, 页面排查能力
+          - list [ref=e119]:
+            - listitem [ref=e120]: 先运行脚本并确认 Chrome 进入调试模式。
+            - listitem [ref=e121]: 完成登录后再执行采集脚本。
+            - listitem [ref=e122]: 将采集结果上传到 Hub 继续分析。

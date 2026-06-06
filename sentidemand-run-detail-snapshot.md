@@ -1,0 +1,80 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - link "SentiDemand Hub comment intelligence workspace" [ref=e3] [cursor=pointer]:
+      - /url: /
+      - generic [ref=e4]: SentiDemand Hub
+      - generic [ref=e5]: comment intelligence workspace
+    - navigation [ref=e6]:
+      - link "主页" [ref=e7] [cursor=pointer]:
+        - /url: /
+      - link "工作台" [ref=e8] [cursor=pointer]:
+        - /url: /workspace
+      - link "旧版入口" [ref=e9] [cursor=pointer]:
+        - /url: /legacy
+  - main [ref=e10]:
+    - generic [ref=e11]:
+      - generic [ref=e12]:
+        - generic [ref=e13]: Legacy Detail
+        - heading "20260423_153511_korean_reviews_mock.csv" [level=1] [ref=e14]
+        - paragraph [ref=e15]: 上传成功，分析完成。可查看表格、仪表盘和建议页。
+      - generic [ref=e16]:
+        - link "表格页" [ref=e17] [cursor=pointer]:
+          - /url: /workspace/6fb0fd8ddf0b
+        - link "图表页" [ref=e18] [cursor=pointer]:
+          - /url: /dashboard/6fb0fd8ddf0b
+        - link "建议页" [ref=e19] [cursor=pointer]:
+          - /url: /insights/6fb0fd8ddf0b
+    - generic [ref=e20]:
+      - article [ref=e21]:
+        - heading "表格" [level=2] [ref=e22]
+        - article [ref=e23]:
+          - heading "processed_data.csv" [level=4] [ref=e24]
+          - paragraph [ref=e25]: derived / 001_processed_data.csv
+          - generic [ref=e26]
+        - article [ref=e29]:
+          - heading "sentiment_distribution.csv" [level=4] [ref=e30]
+          - paragraph [ref=e31]: sentiment / 001_sentiment_distribution.csv
+          - generic [ref=e32]
+        - article [ref=e35]:
+          - heading "model_report_naive_bayes.txt" [level=4] [ref=e36]
+          - paragraph [ref=e37]: sentiment / 002_model_report_naive_bayes.txt
+          - generic [ref=e38]
+        - article [ref=e41]:
+          - heading "model_report_svm.txt" [level=4] [ref=e42]
+          - paragraph [ref=e43]: sentiment / 003_model_report_svm.txt
+          - generic [ref=e44]
+      - article [ref=e47]:
+        - heading "日志" [level=2] [ref=e48]
+        - list [ref=e49]:
+          - listitem [ref=e50]
+          - listitem [ref=e56]
+          - listitem [ref=e62]
+          - listitem [ref=e65]
+          - listitem [ref=e68]
+          - listitem [ref=e71]
+      - article [ref=e74]:
+        - heading "图表" [level=2] [ref=e75]
+        - article [ref=e76]:
+          - heading "评论情感极性分布" [level=4] [ref=e77]
+          - paragraph [ref=e78]: 图表文件：sentiment_donut_153512.html
+          - generic [ref=e79]
+        - article [ref=e82]:
+          - heading "模型特征正负面双向对比" [level=4] [ref=e83]
+          - paragraph [ref=e84]: 图表文件：features_bidirectional_153512.html
+          - generic [ref=e85]
+        - article [ref=e88]:
+          - heading "高频核心词汇 Top30" [level=4] [ref=e89]
+          - paragraph [ref=e90]: 图表文件：features_lollipop_153512.html
+          - generic [ref=e91]
+        - article [ref=e94]:
+          - heading "多模型特征权重热力图" [level=4] [ref=e95]
+          - paragraph [ref=e96]: 图表文件：features_heatmap_153512.html
+          - generic [ref=e97]
+        - article [ref=e100]:
+          - heading "TF-IDF vs 词频对比" [level=4] [ref=e101]
+          - paragraph [ref=e102]: 图表文件：features_tfidf_scatter_153512.html
+          - generic [ref=e103]
+        - article [ref=e106]:
+          - heading "LDA 主题占比玫瑰图" [level=4] [ref=e107]
+          - paragraph [ref=e108]: 图表文件：topics_nightingale_153512.html
+          - generic [ref=e109]

@@ -1,0 +1,283 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - link "SentiDemand Hub comment intelligence workspace" [ref=e3] [cursor=pointer]:
+      - /url: /
+      - generic [ref=e4]: SentiDemand Hub
+      - generic [ref=e5]: comment intelligence workspace
+    - navigation [ref=e6]:
+      - link "主页" [ref=e7] [cursor=pointer]:
+        - /url: /
+      - link "工作台" [ref=e8] [cursor=pointer]:
+        - /url: /workspace
+      - link "旧版入口" [ref=e9] [cursor=pointer]:
+        - /url: /legacy
+  - main [ref=e10]:
+    - generic [ref=e11]:
+      - generic [ref=e12]:
+        - generic [ref=e13]: Workspace / Tables
+        - heading "表格工作台" [level=1] [ref=e14]
+        - paragraph [ref=e15]: 表格和日志信息在工作台管理，图表与建议在其他页面单独查看。
+      - generic [ref=e16]:
+        - link "回到主页" [ref=e17] [cursor=pointer]:
+          - /url: /
+        - link "旧版入口" [ref=e18] [cursor=pointer]:
+          - /url: /legacy
+    - generic [ref=e19]:
+      - complementary [ref=e20]:
+        - heading "运行列表" [level=2] [ref=e22]
+        - generic [ref=e23]:
+          - article [ref=e24]:
+            - generic [ref=e25]:
+              - generic [ref=e26]: completed
+              - generic [ref=e27]: 2026-04-23T15:35:12.391515
+            - heading "20260423_153511_korean_reviews_mock.csv" [level=3] [ref=e28]
+            - paragraph [ref=e29]: 20260423_153511_korean_reviews_mock.csv
+            - paragraph [ref=e30]: 上传成功，分析完成。可查看表格、仪表盘和建议页。
+            - generic [ref=e31]:
+              - link "表格" [ref=e32] [cursor=pointer]:
+                - /url: /workspace/6fb0fd8ddf0b
+              - link "仪表盘" [ref=e33] [cursor=pointer]:
+                - /url: /dashboard/6fb0fd8ddf0b
+              - link "建议" [ref=e34] [cursor=pointer]:
+                - /url: /insights/6fb0fd8ddf0b
+              - link "旧版" [ref=e35] [cursor=pointer]:
+                - /url: /runs/6fb0fd8ddf0b
+          - article [ref=e36]:
+            - generic [ref=e37]:
+              - generic [ref=e38]: completed
+              - generic [ref=e39]: 2026-03-22T20:35:09.730075
+            - heading "20260322_203501_jd_reviews_005.csv" [level=3] [ref=e40]
+            - paragraph [ref=e41]: 20260322_203501_jd_reviews_005.csv
+            - paragraph [ref=e42]: 上传成功，分析完成。可查看表格、仪表盘和建议页。
+            - generic [ref=e43]:
+              - link "表格" [ref=e44] [cursor=pointer]:
+                - /url: /workspace/099e576e77e9
+              - link "仪表盘" [ref=e45] [cursor=pointer]:
+                - /url: /dashboard/099e576e77e9
+              - link "建议" [ref=e46] [cursor=pointer]:
+                - /url: /insights/099e576e77e9
+              - link "旧版" [ref=e47] [cursor=pointer]:
+                - /url: /runs/099e576e77e9
+          - article [ref=e48]:
+            - generic [ref=e49]:
+              - generic [ref=e50]: completed
+              - generic [ref=e51]: 2026-03-19T13:39:51.252663
+            - heading "20260319_133854_jd_reviews_merged.csv" [level=3] [ref=e52]
+            - paragraph [ref=e53]: 20260319_133854_jd_reviews_merged.csv
+            - paragraph [ref=e54]: 上传成功，已生成派生表格、日志和图表。
+            - generic [ref=e55]:
+              - link "表格" [ref=e56] [cursor=pointer]:
+                - /url: /workspace/33a7a673fcea
+              - link "仪表盘" [ref=e57] [cursor=pointer]:
+                - /url: /dashboard/33a7a673fcea
+              - link "建议" [ref=e58] [cursor=pointer]:
+                - /url: /insights/33a7a673fcea
+              - link "旧版" [ref=e59] [cursor=pointer]:
+                - /url: /runs/33a7a673fcea
+          - article [ref=e60]:
+            - generic [ref=e61]:
+              - generic [ref=e62]: completed
+              - generic [ref=e63]: 2026-03-18T20:29:31.650703
+            - heading "20260318_202856_jd_reviews_merged.csv" [level=3] [ref=e64]
+            - paragraph [ref=e65]: 20260318_202856_jd_reviews_merged.csv
+            - paragraph [ref=e66]: 上传成功，已生成派生表格、日志和图表。
+            - generic [ref=e67]:
+              - link "表格" [ref=e68] [cursor=pointer]:
+                - /url: /workspace/4f934c5ff9e2
+              - link "仪表盘" [ref=e69] [cursor=pointer]:
+                - /url: /dashboard/4f934c5ff9e2
+              - link "建议" [ref=e70] [cursor=pointer]:
+                - /url: /insights/4f934c5ff9e2
+              - link "旧版" [ref=e71] [cursor=pointer]:
+                - /url: /runs/4f934c5ff9e2
+          - article [ref=e72]:
+            - generic [ref=e73]:
+              - generic [ref=e74]: completed
+              - generic [ref=e75]: 2026-03-18T20:17:21.275459
+            - heading "20260318_201708_bilibili_BV1mB4y1X7Mh_20260210_190823.csv" [level=3] [ref=e76]
+            - paragraph [ref=e77]: 20260318_201708_bilibili_BV1mB4y1X7Mh_20260210_190823.csv
+            - paragraph [ref=e78]: 上传成功，已生成派生表格、日志和图表。
+            - generic [ref=e79]:
+              - link "表格" [ref=e80] [cursor=pointer]:
+                - /url: /workspace/817e0b14d5fc
+              - link "仪表盘" [ref=e81] [cursor=pointer]:
+                - /url: /dashboard/817e0b14d5fc
+              - link "建议" [ref=e82] [cursor=pointer]:
+                - /url: /insights/817e0b14d5fc
+              - link "旧版" [ref=e83] [cursor=pointer]:
+                - /url: /runs/817e0b14d5fc
+      - generic [ref=e84]:
+        - generic [ref=e85]:
+          - generic [ref=e86]:
+            - heading "20260423_153511_korean_reviews_mock.csv" [level=2] [ref=e87]
+            - paragraph [ref=e88]: 上传成功，分析完成。可查看表格、仪表盘和建议页。
+          - generic [ref=e89]:
+            - link "图表页" [ref=e90] [cursor=pointer]:
+              - /url: /dashboard/6fb0fd8ddf0b
+            - link "建议页" [ref=e91] [cursor=pointer]:
+              - /url: /insights/6fb0fd8ddf0b
+            - link "旧版详情" [ref=e92] [cursor=pointer]:
+              - /url: /runs/6fb0fd8ddf0b
+        - generic [ref=e93]:
+          - article [ref=e94]:
+            - generic [ref=e95]:
+              - heading "processed_data.csv" [level=3] [ref=e96]
+              - generic [ref=e97]: ready
+            - paragraph [ref=e98]: derived / 001_processed_data.csv
+            - complementary [ref=e100]:
+              - searchbox "Type a keyword..." [ref=e103]
+              - generic:
+                - grid:
+                  - rowgroup
+              - generic [ref=e106]:
+                - button "Previous" [disabled] [ref=e107]
+                - button "Next" [disabled] [ref=e108]
+            - generic [ref=e109]:
+              - link "打开" [ref=e110] [cursor=pointer]:
+                - /url: /runs/6fb0fd8ddf0b/artifacts/tables/0
+              - link "下载" [ref=e111] [cursor=pointer]:
+                - /url: /runs/6fb0fd8ddf0b/artifacts/tables/0?download=true
+          - article [ref=e112]:
+            - generic [ref=e113]:
+              - heading "sentiment_distribution.csv" [level=3] [ref=e114]
+              - generic [ref=e115]: ready
+            - paragraph [ref=e116]: sentiment / 001_sentiment_distribution.csv
+            - complementary [ref=e118]:
+              - searchbox "Type a keyword..." [ref=e121]
+              - generic:
+                - grid:
+                  - rowgroup
+              - generic [ref=e124]:
+                - button "Previous" [disabled] [ref=e125]
+                - button "Next" [disabled] [ref=e126]
+            - generic [ref=e127]:
+              - link "打开" [ref=e128] [cursor=pointer]:
+                - /url: /runs/6fb0fd8ddf0b/artifacts/tables/1
+              - link "下载" [ref=e129] [cursor=pointer]:
+                - /url: /runs/6fb0fd8ddf0b/artifacts/tables/1?download=true
+          - article [ref=e130]:
+            - generic [ref=e131]:
+              - heading "model_report_naive_bayes.txt" [level=3] [ref=e132]
+              - generic [ref=e133]: ready
+            - paragraph [ref=e134]: sentiment / 002_model_report_naive_bayes.txt
+            - complementary [ref=e136]:
+              - searchbox "Type a keyword..." [ref=e139]
+              - generic:
+                - grid:
+                  - rowgroup
+              - generic [ref=e142]:
+                - button "Previous" [disabled] [ref=e143]
+                - button "Next" [disabled] [ref=e144]
+            - generic [ref=e145]:
+              - link "打开" [ref=e146] [cursor=pointer]:
+                - /url: /runs/6fb0fd8ddf0b/artifacts/tables/2
+              - link "下载" [ref=e147] [cursor=pointer]:
+                - /url: /runs/6fb0fd8ddf0b/artifacts/tables/2?download=true
+          - article [ref=e148]:
+            - generic [ref=e149]:
+              - heading "model_report_svm.txt" [level=3] [ref=e150]
+              - generic [ref=e151]: ready
+            - paragraph [ref=e152]: sentiment / 003_model_report_svm.txt
+            - complementary [ref=e154]:
+              - searchbox "Type a keyword..." [ref=e157]
+              - generic:
+                - grid:
+                  - rowgroup
+              - generic [ref=e160]:
+                - button "Previous" [disabled] [ref=e161]
+                - button "Next" [disabled] [ref=e162]
+            - generic [ref=e163]:
+              - link "打开" [ref=e164] [cursor=pointer]:
+                - /url: /runs/6fb0fd8ddf0b/artifacts/tables/3
+              - link "下载" [ref=e165] [cursor=pointer]:
+                - /url: /runs/6fb0fd8ddf0b/artifacts/tables/3?download=true
+          - article [ref=e166]:
+            - generic [ref=e167]:
+              - heading "model_report_logistic_regression.txt" [level=3] [ref=e168]
+              - generic [ref=e169]: ready
+            - paragraph [ref=e170]: sentiment / 004_model_report_logistic_regression.txt
+            - complementary [ref=e172]:
+              - searchbox "Type a keyword..." [ref=e175]
+              - generic:
+                - grid:
+                  - rowgroup
+              - generic [ref=e178]:
+                - button "Previous" [disabled] [ref=e179]
+                - button "Next" [disabled] [ref=e180]
+            - generic [ref=e181]:
+              - link "打开" [ref=e182] [cursor=pointer]:
+                - /url: /runs/6fb0fd8ddf0b/artifacts/tables/4
+              - link "下载" [ref=e183] [cursor=pointer]:
+                - /url: /runs/6fb0fd8ddf0b/artifacts/tables/4?download=true
+          - article [ref=e184]:
+            - generic [ref=e185]:
+              - heading "top_keywords.csv" [level=3] [ref=e186]
+              - generic [ref=e187]: ready
+            - paragraph [ref=e188]: word_frequency / 001_top_keywords.csv
+            - complementary [ref=e190]:
+              - searchbox "Type a keyword..." [ref=e193]
+              - generic:
+                - grid:
+                  - rowgroup
+              - generic [ref=e196]:
+                - button "Previous" [disabled] [ref=e197]
+                - button "Next" [disabled] [ref=e198]
+            - generic [ref=e199]:
+              - link "打开" [ref=e200] [cursor=pointer]:
+                - /url: /runs/6fb0fd8ddf0b/artifacts/tables/5
+              - link "下载" [ref=e201] [cursor=pointer]:
+                - /url: /runs/6fb0fd8ddf0b/artifacts/tables/5?download=true
+          - article [ref=e202]:
+            - generic [ref=e203]:
+              - heading "topics.csv" [level=3] [ref=e204]
+              - generic [ref=e205]: ready
+            - paragraph [ref=e206]: word_frequency / 002_topics.csv
+            - complementary [ref=e208]:
+              - searchbox "Type a keyword..." [ref=e211]
+              - generic:
+                - grid:
+                  - rowgroup
+              - generic [ref=e214]:
+                - button "Previous" [disabled] [ref=e215]
+                - button "Next" [disabled] [ref=e216]
+            - generic [ref=e217]:
+              - link "打开" [ref=e218] [cursor=pointer]:
+                - /url: /runs/6fb0fd8ddf0b/artifacts/tables/6
+              - link "下载" [ref=e219] [cursor=pointer]:
+                - /url: /runs/6fb0fd8ddf0b/artifacts/tables/6?download=true
+          - article [ref=e220]:
+            - generic [ref=e221]:
+              - heading "demand_intensity.csv" [level=3] [ref=e222]
+              - generic [ref=e223]: ready
+            - paragraph [ref=e224]: demand / 001_demand_intensity.csv
+            - complementary [ref=e226]:
+              - searchbox "Type a keyword..." [ref=e229]
+              - generic:
+                - grid:
+                  - rowgroup
+              - generic [ref=e232]:
+                - button "Previous" [disabled] [ref=e233]
+                - button "Next" [disabled] [ref=e234]
+            - generic [ref=e235]:
+              - link "打开" [ref=e236] [cursor=pointer]:
+                - /url: /runs/6fb0fd8ddf0b/artifacts/tables/7
+              - link "下载" [ref=e237] [cursor=pointer]:
+                - /url: /runs/6fb0fd8ddf0b/artifacts/tables/7?download=true
+          - article [ref=e238]:
+            - generic [ref=e239]:
+              - heading "demand_correlation.csv" [level=3] [ref=e240]
+              - generic [ref=e241]: ready
+            - paragraph [ref=e242]: demand / 002_demand_correlation.csv
+            - complementary [ref=e244]:
+              - searchbox "Type a keyword..." [ref=e247]
+              - generic:
+                - grid:
+                  - rowgroup
+              - generic [ref=e250]:
+                - button "Previous" [disabled] [ref=e251]
+                - button "Next" [disabled] [ref=e252]
+            - generic [ref=e253]:
+              - link "打开" [ref=e254] [cursor=pointer]:
+                - /url: /runs/6fb0fd8ddf0b/artifacts/tables/8
+              - link "下载" [ref=e255] [cursor=pointer]:
+                - /url: /runs/6fb0fd8ddf0b/artifacts/tables/8?download=true

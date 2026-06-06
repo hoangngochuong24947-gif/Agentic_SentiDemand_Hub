@@ -1,0 +1,19 @@
+# Korean stopwords for review analysis
+이
+그
+저
+것
+수
+등
+좀
+정말
+진짜
+그리고
+하지만
+에서
+에게
+으로
+하다
+되다
+입니다
+있다
