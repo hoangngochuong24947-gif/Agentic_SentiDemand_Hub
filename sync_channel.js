@@ -40,9 +40,7 @@ function loadIndex() {
         }
         return data;
       } catch (e) {
-        console.error(`\nERROR: Failed to parse index file ${INDEX_FILE}:`, e.message);
-        console.error('To avoid overwriting sync history, the process will exit.');
-        process.exit(1);
+        throw new Error(`Failed to parse index file ${INDEX_FILE}: ${e.message}`);
       }
     }
   }
@@ -51,10 +49,12 @@ function loadIndex() {
 
 function saveIndex(index) {
   ensureDirectories();
+  const tempPath = path.join(TEMP_DIR, 'index.tmp.json');
   try {
-    fs.writeFileSync(INDEX_FILE, JSON.stringify(index, null, 2), 'utf8');
+    fs.writeFileSync(tempPath, JSON.stringify(index, null, 2), 'utf8');
+    fs.renameSync(tempPath, INDEX_FILE);
   } catch (e) {
-    console.error(`Failed to write index file to ${INDEX_FILE}:`, e.message);
+    console.error(`Failed to write index file atomically:`, e.message);
     throw e;
   }
 }
@@ -70,9 +70,7 @@ function loadFailed() {
         }
         return data;
       } catch (e) {
-        console.error(`\nERROR: Failed to parse failed file ${FAILED_FILE}:`, e.message);
-        console.error('To avoid overwriting failed list history, the process will exit.');
-        process.exit(1);
+        throw new Error(`Failed to parse failed file ${FAILED_FILE}: ${e.message}`);
       }
     }
   }
@@ -81,10 +79,12 @@ function loadFailed() {
 
 function saveFailed(failed) {
   ensureDirectories();
+  const tempPath = path.join(TEMP_DIR, 'failed.tmp.json');
   try {
-    fs.writeFileSync(FAILED_FILE, JSON.stringify(failed, null, 2), 'utf8');
+    fs.writeFileSync(tempPath, JSON.stringify(failed, null, 2), 'utf8');
+    fs.renameSync(tempPath, FAILED_FILE);
   } catch (e) {
-    console.error(`Failed to write failed file to ${FAILED_FILE}:`, e.message);
+    console.error(`Failed to write failed file atomically:`, e.message);
     throw e;
   }
 }
@@ -126,8 +126,174 @@ function fetchChannelVideos() {
   }).filter(v => v !== null);
 }
 
-// Execute only if run directly
-if (process.argv[1] === fileURLToPath(import.meta.url)) {
-  checkDependencies();
+function sanitizeFilename(name) {
+  return name.replace(/[\\/:*?"<>|]/g, '-').replace(/\s+/g, ' ').trim();
+}
+
+function processVideo(video, index, total) {
+  console.log(`[${index}/${total}] Processing: ${video.id} - ${video.title}`);
+  
+  // Clean temp dir before running
+  if (fs.existsSync(TEMP_DIR)) {
+    fs.rmSync(TEMP_DIR, { recursive: true, force: true });
+  }
+  fs.mkdirSync(TEMP_DIR, { recursive: true });
+
+  // Single quote the ID for safety in shell
+  const cmd = `npx -y bun "${PLUGIN_PATH}" '${video.id}' --languages zh,en --chapters --output-dir "${TEMP_DIR}"`;
+  try {
+    execSync(cmd, { stdio: 'inherit' });
+  } catch (e) {
+    console.error(`Error executing transcript tool for ${video.id}:`, e.message);
+    throw new Error(`Transcript extraction failed: ${e.message}`);
+  }
+
+  // Locate the downloaded files in TEMP_DIR. Path format: TEMP_DIR/{channel-slug}/{video-slug}/
+  const channelFolders = fs.readdirSync(TEMP_DIR).filter(f => fs.statSync(path.join(TEMP_DIR, f)).isDirectory());
+  if (channelFolders.length === 0) {
+    throw new Error(`No downloaded channel folder found in temp directory for ${video.id}`);
+  }
+  const channelPath = path.join(TEMP_DIR, channelFolders[0]);
+  const videoFolders = fs.readdirSync(channelPath).filter(f => fs.statSync(path.join(channelPath, f)).isDirectory());
+  if (videoFolders.length === 0) {
+    throw new Error(`No video output folder found in temp directory for ${video.id}`);
+  }
+  const videoPath = path.join(channelPath, videoFolders[0]);
+
+  // Expected files
+  const metaFile = path.join(videoPath, 'meta.json');
+  const mdFile = path.join(videoPath, 'transcript.md');
+  const coverFile = path.join(videoPath, 'imgs', 'cover.jpg');
+
+  if (!fs.existsSync(mdFile)) {
+    throw new Error(`transcript.md not found in output for ${video.id}`);
+  }
+
+  // Read meta to get normalized publish date if available
+  let publishDate = video.date;
+  let title = video.title;
+  if (fs.existsSync(metaFile)) {
+    try {
+      const meta = JSON.parse(fs.readFileSync(metaFile, 'utf8'));
+      if (meta.publishDate) publishDate = meta.publishDate;
+      if (meta.title) title = meta.title;
+    } catch (e) {
+      // Fallback to yt-dlp parsed info
+    }
+  }
+
+  const cleanTitle = sanitizeFilename(title);
+  const targetMdName = `[${publishDate}] ${cleanTitle}.md`;
+  const targetMdPath = path.join(OBSIDIAN_DIR, targetMdName);
+  const targetCoverName = `${video.id}.jpg`;
+  const targetCoverPath = path.join(ASSETS_DIR, targetCoverName);
+
+  // Copy cover image if exists
+  let hasCover = false;
+  if (fs.existsSync(coverFile)) {
+    fs.copyFileSync(coverFile, targetCoverPath);
+    hasCover = true;
+  }
+
+  // Process markdown content (fix cover image path to relative Obsidian format)
+  let mdContent = fs.readFileSync(mdFile, 'utf8');
+  
+  // Replace default cover image reference with Obsidian relative asset reference
+  if (hasCover) {
+    mdContent = mdContent.replace(/!\[cover\]\(imgs\/cover\.jpg\)/g, `![封面图](assets/${targetCoverName})`);
+  } else {
+    mdContent = mdContent.replace(/!\[cover\]\(imgs\/cover\.jpg\)/g, '');
+  }
+
+  // Write modified file to target Obsidian path
+  fs.writeFileSync(targetMdPath, mdContent, 'utf8');
+  console.log(`✓ Successfully saved: ${targetMdName}`);
+}
+
+function main() {
   ensureDirectories();
+  checkDependencies();
+
+  let index, failed;
+  try {
+    index = loadIndex();
+    failed = loadFailed();
+  } catch (e) {
+    console.error(`❌ Initialization error: ${e.message}`);
+    process.exit(1);
+  }
+
+  const syncedIds = new Set(index.synced);
+
+  let allVideos = [];
+  try {
+    allVideos = fetchChannelVideos();
+    console.log(`Found total of ${allVideos.length} videos on the channel.`);
+  } catch (e) {
+    console.error('Failed to retrieve video list from channel:', e.message);
+    process.exit(1);
+  }
+
+  // Filter to unsynced
+  const unsynced = allVideos.filter(v => !syncedIds.has(v.id));
+  console.log(`Found ${unsynced.length} unsynced videos.`);
+
+  if (unsynced.length === 0) {
+    console.log('All videos are up to date! Nothing to do.');
+    return;
+  }
+
+  let successCount = 0;
+  let failCount = 0;
+
+  for (let i = 0; i < unsynced.length; i++) {
+    const video = unsynced[i];
+    try {
+      processVideo(video, i + 1, unsynced.length);
+      
+      // Mark as synced
+      index.synced.push(video.id);
+      saveIndex(index);
+      
+      // Remove from failed list if it previously failed
+      if (failed.failed[video.id]) {
+        delete failed.failed[video.id];
+        saveFailed(failed);
+      }
+      
+      successCount++;
+    } catch (err) {
+      console.error(`❌ Failed to sync video ${video.id}: ${err.message}`);
+      failed.failed[video.id] = {
+        title: video.title,
+        date: video.date,
+        error: err.message,
+        timestamp: new Date().toISOString()
+      };
+      saveFailed(failed);
+      failCount++;
+    } finally {
+      // Clean up temp dir
+      if (fs.existsSync(TEMP_DIR)) {
+        fs.rmSync(TEMP_DIR, { recursive: true, force: true });
+      }
+    }
+
+    // Add a sleep interval (1.5 seconds) to avoid aggressive spamming
+    if (i < unsynced.length - 1) {
+      console.log('Waiting 1.5 seconds...');
+      execSync('sleep 1.5');
+    }
+  }
+
+  console.log('\n--- Sync Complete ---');
+  console.log(`Successfully synced: ${successCount}`);
+  console.log(`Failed to sync: ${failCount}`);
+  if (failCount > 0) {
+    console.log(`Failed details written to: ${FAILED_FILE}`);
+  }
+}
+
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  main();
 }
