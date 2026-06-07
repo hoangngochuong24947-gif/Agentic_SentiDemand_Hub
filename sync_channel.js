@@ -1,4 +1,4 @@
-import { execSync } from 'child_process';
+import { execSync, execFileSync } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
@@ -41,7 +41,13 @@ function loadIndex() {
 }
 
 function saveIndex(index) {
-  fs.writeFileSync(INDEX_FILE, JSON.stringify(index, null, 2), 'utf8');
+  ensureDirectories();
+  try {
+    fs.writeFileSync(INDEX_FILE, JSON.stringify(index, null, 2), 'utf8');
+  } catch (e) {
+    console.error(`Failed to write index file to ${INDEX_FILE}:`, e.message);
+    throw e;
+  }
 }
 
 function loadFailed() {
@@ -56,14 +62,31 @@ function loadFailed() {
 }
 
 function saveFailed(failed) {
-  fs.writeFileSync(FAILED_FILE, JSON.stringify(failed, null, 2), 'utf8');
+  ensureDirectories();
+  try {
+    fs.writeFileSync(FAILED_FILE, JSON.stringify(failed, null, 2), 'utf8');
+  } catch (e) {
+    console.error(`Failed to write failed file to ${FAILED_FILE}:`, e.message);
+    throw e;
+  }
 }
 
 function fetchChannelVideos() {
   console.log(`Fetching videos from channel ${CHANNEL_URL}...`);
   // Format: id|upload_date|title
-  const command = `yt-dlp --flat-playlist --print "%(id)s|%(upload_date)s|%(title)s" "${CHANNEL_URL}"`;
-  const output = execSync(command, { encoding: 'utf8', maxBuffer: 10 * 1024 * 1024 });
+  const args = [
+    '--flat-playlist',
+    '--print',
+    '%(id)s|%(upload_date)s|%(title)s',
+    CHANNEL_URL
+  ];
+  let output;
+  try {
+    output = execFileSync('yt-dlp', args, { encoding: 'utf8', maxBuffer: 10 * 1024 * 1024 });
+  } catch (e) {
+    console.error(`Failed to fetch channel videos from ${CHANNEL_URL}:`, e.message);
+    throw new Error(`Failed to query yt-dlp: ${e.message}`);
+  }
   const lines = output.trim().split('\n');
   
   return lines.map(line => {
