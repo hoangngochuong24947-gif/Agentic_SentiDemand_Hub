@@ -31,10 +31,19 @@ function checkDependencies() {
 
 function loadIndex() {
   if (fs.existsSync(INDEX_FILE)) {
-    try {
-      return JSON.parse(fs.readFileSync(INDEX_FILE, 'utf8'));
-    } catch (e) {
-      return { synced: [] };
+    const content = fs.readFileSync(INDEX_FILE, 'utf8').trim();
+    if (content.length > 0) {
+      try {
+        const data = JSON.parse(content);
+        if (!data || !Array.isArray(data.synced)) {
+          throw new Error('Invalid index format: synced must be an array');
+        }
+        return data;
+      } catch (e) {
+        console.error(`\nERROR: Failed to parse index file ${INDEX_FILE}:`, e.message);
+        console.error('To avoid overwriting sync history, the process will exit.');
+        process.exit(1);
+      }
     }
   }
   return { synced: [] };
@@ -52,10 +61,19 @@ function saveIndex(index) {
 
 function loadFailed() {
   if (fs.existsSync(FAILED_FILE)) {
-    try {
-      return JSON.parse(fs.readFileSync(FAILED_FILE, 'utf8'));
-    } catch (e) {
-      return { failed: {} };
+    const content = fs.readFileSync(FAILED_FILE, 'utf8').trim();
+    if (content.length > 0) {
+      try {
+        const data = JSON.parse(content);
+        if (!data || typeof data.failed !== 'object' || data.failed === null) {
+          throw new Error('Invalid failed file format: failed must be an object');
+        }
+        return data;
+      } catch (e) {
+        console.error(`\nERROR: Failed to parse failed file ${FAILED_FILE}:`, e.message);
+        console.error('To avoid overwriting failed list history, the process will exit.');
+        process.exit(1);
+      }
     }
   }
   return { failed: {} };
@@ -87,11 +105,17 @@ function fetchChannelVideos() {
     console.error(`Failed to fetch channel videos from ${CHANNEL_URL}:`, e.message);
     throw new Error(`Failed to query yt-dlp: ${e.message}`);
   }
-  const lines = output.trim().split('\n');
+  const lines = output.trim().split(/\r?\n/);
   
   return lines.map(line => {
     const parts = line.split('|');
+    if (parts.length < 3) return null;
+    
     const id = parts[0];
+    if (!/^[a-zA-Z0-9_-]{11}$/.test(id)) {
+      return null;
+    }
+    
     const rawDate = parts[1];
     const title = parts.slice(2).join('|');
     // Format upload_date YYYYMMDD to YYYY-MM-DD
@@ -99,7 +123,7 @@ function fetchChannelVideos() {
       ? `${rawDate.slice(0, 4)}-${rawDate.slice(4, 6)}-${rawDate.slice(6, 8)}`
       : 'unknown-date';
     return { id, date: formattedDate, title };
-  }).filter(v => v.id);
+  }).filter(v => v !== null);
 }
 
 // Execute only if run directly
