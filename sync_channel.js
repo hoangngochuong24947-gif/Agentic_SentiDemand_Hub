@@ -151,7 +151,7 @@ function processVideo(video, index, total) {
   const args = [
     ...runnerArgs,
     video.id,
-    '--languages', 'zh,en',
+    '--languages', 'zh-CN,zh-Hans,zh,en',
     '--chapters',
     '--output-dir', TEMP_DIR
   ];
