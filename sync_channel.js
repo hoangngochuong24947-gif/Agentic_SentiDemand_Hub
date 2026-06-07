@@ -13,6 +13,15 @@ const FAILED_FILE = path.join(OBSIDIAN_DIR, '.failed_videos.json');
 const TEMP_DIR = path.join(OBSIDIAN_DIR, '.temp');
 const PLUGIN_PATH = path.join(HOME, '.gemini/config/plugins/baoyu-youtube-transcript-plugin/skills/baoyu-youtube-transcript/scripts/main.ts');
 
+let runner = 'bun';
+let runnerArgs = [PLUGIN_PATH];
+try {
+  execSync('bun --version', { stdio: 'ignore' });
+} catch (e) {
+  runner = 'npx';
+  runnerArgs = ['-y', 'bun', PLUGIN_PATH];
+}
+
 function ensureDirectories() {
   if (!fs.existsSync(OBSIDIAN_DIR)) fs.mkdirSync(OBSIDIAN_DIR, { recursive: true });
   if (!fs.existsSync(ASSETS_DIR)) fs.mkdirSync(ASSETS_DIR, { recursive: true });
@@ -140,14 +149,14 @@ function processVideo(video, index, total) {
   fs.mkdirSync(TEMP_DIR, { recursive: true });
 
   const args = [
-    '-y', 'bun', PLUGIN_PATH,
+    ...runnerArgs,
     video.id,
     '--languages', 'zh,en',
     '--chapters',
     '--output-dir', TEMP_DIR
   ];
   try {
-    execFileSync('npx', args, { stdio: 'inherit' });
+    execFileSync(runner, args, { stdio: 'inherit' });
   } catch (e) {
     console.error(`Error executing transcript tool for ${video.id}:`, e.message);
     throw new Error(`Transcript extraction failed: ${e.message}`);
@@ -188,7 +197,8 @@ function processVideo(video, index, total) {
   }
 
   const cleanTitle = sanitizeFilename(title);
-  const targetMdName = `[${publishDate}] ${cleanTitle}.md`;
+  const cleanDate = sanitizeFilename((publishDate || '').slice(0, 10));
+  const targetMdName = `[${cleanDate}] ${cleanTitle}.md`;
   const targetMdPath = path.join(OBSIDIAN_DIR, targetMdName);
   const targetCoverName = `${video.id}.jpg`;
   const targetCoverPath = path.join(ASSETS_DIR, targetCoverName);
@@ -206,8 +216,10 @@ function processVideo(video, index, total) {
   // Replace default cover image reference with Obsidian relative asset reference
   if (hasCover) {
     mdContent = mdContent.replace(/!\[cover\]\(imgs\/cover\.jpg\)/g, `![封面图](assets/${targetCoverName})`);
+    mdContent = mdContent.replace(/cover:\s*imgs\/cover\.jpg/g, `cover: assets/${targetCoverName}`);
   } else {
     mdContent = mdContent.replace(/!\[cover\]\(imgs\/cover\.jpg\)/g, '');
+    mdContent = mdContent.replace(/cover:\s*imgs\/cover\.jpg\r?\n/g, '');
   }
 
   // Write modified file to target Obsidian path
