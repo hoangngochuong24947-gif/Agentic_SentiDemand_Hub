@@ -139,10 +139,15 @@ function processVideo(video, index, total) {
   }
   fs.mkdirSync(TEMP_DIR, { recursive: true });
 
-  // Single quote the ID for safety in shell
-  const cmd = `npx -y bun "${PLUGIN_PATH}" '${video.id}' --languages zh,en --chapters --output-dir "${TEMP_DIR}"`;
+  const args = [
+    '-y', 'bun', PLUGIN_PATH,
+    video.id,
+    '--languages', 'zh,en',
+    '--chapters',
+    '--output-dir', TEMP_DIR
+  ];
   try {
-    execSync(cmd, { stdio: 'inherit' });
+    execFileSync('npx', args, { stdio: 'inherit' });
   } catch (e) {
     console.error(`Error executing transcript tool for ${video.id}:`, e.message);
     throw new Error(`Transcript extraction failed: ${e.message}`);
@@ -208,6 +213,10 @@ function processVideo(video, index, total) {
   // Write modified file to target Obsidian path
   fs.writeFileSync(targetMdPath, mdContent, 'utf8');
   console.log(`✓ Successfully saved: ${targetMdName}`);
+}
+
+function sleepSync(ms) {
+  Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
 }
 
 function main() {
@@ -282,7 +291,7 @@ function main() {
     // Add a sleep interval (1.5 seconds) to avoid aggressive spamming
     if (i < unsynced.length - 1) {
       console.log('Waiting 1.5 seconds...');
-      execSync('sleep 1.5');
+      sleepSync(1500);
     }
   }
 
