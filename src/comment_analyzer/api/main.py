@@ -807,6 +807,9 @@ def _run_upload_pipeline(upload_path: Path, settings: Settings, job_id: str) -> 
             chart_files=materialized_charts,
         )
         run_registry.record(record)
+        if hasattr(dataframe, "columns"):
+            text_column = pipeline.detect_text_column(dataframe)
+            run_registry.save_comments(results.run_id, results.processed_data, text_column)
         update_job_step(job_id, current_step, "completed")
         update_job(
             job_id,
@@ -1034,6 +1037,19 @@ def create_app(settings: Optional[Settings] = None) -> FastAPI:
                 "media_type": mimetypes.guess_type(path.name)[0] or "application/octet-stream",
             }
         )
+
+    @app.get("/api/v1/runs/{run_id}/comments")
+    def get_run_comments(run_id: str) -> Any:
+        registry = _registry(app_settings)
+        _record_or_404(registry, run_id)
+        comments = registry.get_comments(run_id)
+        return JSONResponse({"comments": comments})
+
+    @app.post("/api/v1/comments/{comment_id}/update")
+    async def update_run_comment(comment_id: int, payload: Dict[str, Any] = Body(...)) -> Any:
+        registry = _registry(app_settings)
+        registry.update_comment(comment_id, payload)
+        return JSONResponse({"status": "ok", "message": "Comment updated successfully"})
 
     return app
 

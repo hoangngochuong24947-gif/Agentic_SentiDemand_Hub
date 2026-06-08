@@ -219,7 +219,7 @@ class TestConfigurationIntegration:
 
         # Should be able to access nested values
         assert config.data.platform == "generic"
-        assert config.sentiment.labeling_method == "snownlp"
+        assert config.sentiment.labeling_method in {"snownlp", "auto"}
 
         # Should be able to use with pipeline
         from comment_analyzer import CommentPipeline

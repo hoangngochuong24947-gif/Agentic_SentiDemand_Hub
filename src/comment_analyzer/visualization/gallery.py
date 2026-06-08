@@ -769,6 +769,19 @@ def create_app(settings: Optional[Settings] = None) -> Any:
             raise HTTPException(status_code=404, detail=f"Run id '{run_id}' not found")
         return JSONResponse(record)
 
+    @app.get("/api/runs/{run_id}/comments", response_class=JSONResponse)
+    def api_run_comments(run_id: str) -> Any:
+        record = run_registry.get_run(run_id)
+        if record is None:
+            raise HTTPException(status_code=404, detail=f"Run id '{run_id}' not found")
+        comments = run_registry.get_comments(run_id)
+        return JSONResponse({"comments": comments})
+
+    @app.post("/api/comments/{comment_id}/update", response_class=JSONResponse)
+    async def api_update_comment(comment_id: int, payload: Dict[str, Any] = Body(...)) -> Any:
+        run_registry.update_comment(comment_id, payload)
+        return JSONResponse({"status": "ok", "message": "Comment updated successfully"})
+
     @app.post("/api/session/deepseek-key", response_class=JSONResponse)
     async def save_deepseek_key(payload: Dict[str, Any] = Body(...)) -> Any:
         api_key = str(payload.get("api_key") or "").strip()
@@ -953,6 +966,9 @@ def create_app(settings: Optional[Settings] = None) -> Any:
                 chart_files=materialized_charts,
             )
             run_registry.record(record)
+            if hasattr(dataframe, "columns"):
+                text_column = pipeline.detect_text_column(dataframe)
+                run_registry.save_comments(results.run_id, results.processed_data, text_column)
         except Exception as exc:
             logger.exception("Failed to process uploaded file")
             failure_category = classify_upload_failure(exc)

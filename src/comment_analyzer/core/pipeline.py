@@ -835,7 +835,14 @@ to generating insights. It uses a configuration-driven approach for
         if verbose:
             print("  Labeling sentiment...")
         df = df.copy()
-        df['sentiment'] = self.sentiment_labeler.label_batch(df['cleaned_text'])
+        scores = [self.sentiment_labeler.get_score(text) for text in df['cleaned_text']]
+        df['sentiment_score'] = scores
+        df['sentiment'] = [
+            "positive" if score >= self.sentiment_labeler.threshold_positive
+            else "negative" if score <= self.sentiment_labeler.threshold_negative
+            else "neutral"
+            for score in scores
+        ]
 
         distribution = df['sentiment'].value_counts().to_dict()
 

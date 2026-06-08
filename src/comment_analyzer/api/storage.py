@@ -23,6 +23,12 @@ class RunStorage(Protocol):
     def latest(self) -> Optional[Dict[str, Any]]:
         ...
 
+    def get_comments(self, run_id: str) -> List[Dict[str, Any]]:
+        ...
+
+    def update_comment(self, comment_id: int, updates: Dict[str, Any]) -> None:
+        ...
+
 
 class JsonRunStorage:
     """JSON-backed run storage that preserves the existing RunRegistry behavior."""
@@ -41,3 +47,9 @@ class JsonRunStorage:
 
     def latest(self) -> Optional[Dict[str, Any]]:
         return self.registry.latest()
+
+    def get_comments(self, run_id: str) -> List[Dict[str, Any]]:
+        return self.registry.get_comments(run_id)
+
+    def update_comment(self, comment_id: int, updates: Dict[str, Any]) -> None:
+        self.registry.update_comment(comment_id, updates)

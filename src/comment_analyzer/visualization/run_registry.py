@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import json
+import sqlite3
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
@@ -206,84 +208,377 @@ class RunRecord:
 
 
 class RunRegistry:
-    """Persist and group run records for upload history."""
+    """SQLite-backed run registry that persists and groups run records for upload history."""
 
     def __init__(self, registry_path: Path):
-        self.registry_path = Path(registry_path)
-        self.registry_path.parent.mkdir(parents=True, exist_ok=True)
+        self.json_path = Path(registry_path)
+        self.db_path = self.json_path.with_suffix(".db")
+        self.db_path.parent.mkdir(parents=True, exist_ok=True)
+        self._init_db()
+        self._migrate_if_needed()
 
-    def _load(self) -> Dict[str, Any]:
-        if not self.registry_path.exists():
-            return {"version": "1.0", "runs": []}
+    def _init_db(self) -> None:
+        with sqlite3.connect(str(self.db_path)) as conn:
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS runs (
+                    run_id TEXT PRIMARY KEY,
+                    source_file TEXT,
+                    created_at TEXT,
+                    status TEXT,
+                    user_message TEXT,
+                    failure_category TEXT,
+                    failure_message TEXT,
+                    insight_status TEXT,
+                    insight_updated_at TEXT,
+                    summary TEXT,
+                    derived_tables TEXT,
+                    logs TEXT,
+                    charts TEXT,
+                    insights TEXT,
+                    advice_markdown TEXT,
+                    chart_failures TEXT
+                )
+            """)
+            try:
+                conn.execute("ALTER TABLE runs ADD COLUMN chart_failures TEXT")
+            except sqlite3.OperationalError:
+                pass
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS comments (
+                    comment_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    run_id TEXT,
+                    raw_content TEXT,
+                    cleaned_text TEXT,
+                    segmented_text TEXT,
+                    filtered_text TEXT,
+                    processed_text TEXT,
+                    sentiment TEXT,
+                    sentiment_score REAL,
+                    FOREIGN KEY(run_id) REFERENCES runs(run_id) ON DELETE CASCADE
+                )
+            """)
+
+    def _migrate_if_needed(self) -> None:
+        if not self.json_path.exists() or self.json_path.stat().st_size == 0:
+            return
 
         try:
-            import json
-
-            data = json.loads(self.registry_path.read_text(encoding="utf-8"))
+            logger.info(f"Migrating run registry from JSON to SQLite: {self.json_path} -> {self.db_path}")
+            data = json.loads(self.json_path.read_text(encoding="utf-8"))
+            runs = data.get("runs", [])
+            for run in runs:
+                if isinstance(run, dict):
+                    self.record(run)
+            
+            # Rename JSON registry to prevent re-migration
+            backup_path = self.json_path.with_suffix(".json.bak")
+            self.json_path.rename(backup_path)
+            logger.info(f"JSON registry migrated and backed up to: {backup_path}")
         except Exception as exc:
-            logger.warning(f"Invalid run registry at {self.registry_path}: {exc}")
-            return {"version": "1.0", "runs": []}
-
-        runs = data.get("runs", [])
-        if not isinstance(runs, list):
-            runs = []
-        data["runs"] = [run for run in runs if isinstance(run, dict)]
-        return data
-
-    def _save(self, payload: Dict[str, Any]) -> None:
-        import json
-
-        self.registry_path.write_text(
-            json.dumps(payload, ensure_ascii=False, indent=2),
-            encoding="utf-8",
-        )
+            logger.error(f"Failed to migrate JSON registry to SQLite: {exc}")
 
     def to_dict(self) -> Dict[str, Any]:
-        return self._load()
+        return {"version": "3.0", "runs": self.list_runs()}
+
+    def _row_to_dict(self, row: tuple) -> Dict[str, Any]:
+        (
+            run_id,
+            source_file,
+            created_at,
+            status,
+            user_message,
+            failure_category,
+            failure_message,
+            insight_status,
+            insight_updated_at,
+            summary_str,
+            derived_tables_str,
+            logs_str,
+            charts_str,
+            insights_str,
+            advice_markdown,
+            chart_failures_str
+        ) = row
+
+        def _safe_json_loads(val: str, default: Any) -> Any:
+            if not val:
+                return default
+            try:
+                return json.loads(val)
+            except Exception:
+                return default
+
+        return {
+            "run_id": run_id,
+            "source_file": source_file,
+            "created_at": created_at,
+            "status": status,
+            "user_message": user_message or "",
+            "failure_category": failure_category,
+            "failure_message": failure_message,
+            "insight_status": insight_status or "not_generated",
+            "insight_updated_at": insight_updated_at or "",
+            "summary": _safe_json_loads(summary_str, {}),
+            "derived_tables": _safe_json_loads(derived_tables_str, []),
+            "logs": _safe_json_loads(logs_str, []),
+            "charts": _safe_json_loads(charts_str, []),
+            "insights": _safe_json_loads(insights_str, []),
+            "advice_markdown": advice_markdown or "",
+            "chart_failures": _safe_json_loads(chart_failures_str, []),
+        }
 
     def list_runs(self) -> List[Dict[str, Any]]:
-        """Return all recorded runs in stored order."""
-
-        return list(self._load().get("runs", []))
+        """Return all recorded runs in reverse chronological order."""
+        with sqlite3.connect(str(self.db_path)) as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                """
+                SELECT run_id, source_file, created_at, status, user_message, 
+                       failure_category, failure_message, insight_status, 
+                       insight_updated_at, summary, derived_tables, logs, 
+                       charts, insights, advice_markdown, chart_failures 
+                FROM runs ORDER BY created_at DESC
+                """
+            )
+            rows = cursor.fetchall()
+            return [self._row_to_dict(row) for row in rows]
 
     def get_run(self, run_id: str) -> Optional[Dict[str, Any]]:
         """Return a run by id if it exists."""
-
-        for record in self._load().get("runs", []):
-            if str(record.get("run_id")) == str(run_id):
-                return record
-        return None
+        with sqlite3.connect(str(self.db_path)) as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                """
+                SELECT run_id, source_file, created_at, status, user_message, 
+                       failure_category, failure_message, insight_status, 
+                       insight_updated_at, summary, derived_tables, logs, 
+                       charts, insights, advice_markdown, chart_failures 
+                FROM runs WHERE run_id = ?
+                """,
+                (run_id,)
+            )
+            row = cursor.fetchone()
+            if not row:
+                return None
+            
+            run_dict = self._row_to_dict(row)
+            
+            # Override preview for processed_data.csv dynamically if comments exist in db
+            try:
+                cursor.execute(
+                    """
+                    SELECT comment_id, raw_content, cleaned_text, segmented_text, 
+                           filtered_text, processed_text, sentiment, sentiment_score 
+                    FROM comments WHERE run_id = ? ORDER BY comment_id ASC LIMIT 5
+                    """,
+                    (run_id,)
+                )
+                db_comments = cursor.fetchall()
+                if db_comments:
+                    for table in run_dict.get("derived_tables", []):
+                        if table.get("name") == "processed_data.csv":
+                            preview_rows = []
+                            columns = table.get("preview", {}).get("columns", [])
+                            text_col = "content"
+                            for col in columns:
+                                if col.lower() in {"content", "comment", "review", "text", "评论", "内容", "评价", "리뷰", "후기"}:
+                                    text_col = col
+                                    break
+                            
+                            if "comment_id" not in columns:
+                                columns.insert(0, "comment_id")
+                            if "sentiment_score" not in columns:
+                                columns.append("sentiment_score")
+                            
+                            table["preview"]["columns"] = columns
+                            
+                            for c in db_comments:
+                                row_dict = {
+                                    "comment_id": str(c[0]),
+                                    text_col: str(c[1]),
+                                    "cleaned_text": str(c[2]),
+                                    "segmented_text": str(c[3]),
+                                    "filtered_text": str(c[4]),
+                                    "processed_text": str(c[5]),
+                                    "sentiment": str(c[6]),
+                                    "sentiment_score": f"{c[7]:.4f}" if c[7] is not None else "0.5000"
+                                }
+                                preview_rows.append(row_dict)
+                            table["preview"]["rows"] = preview_rows
+            except Exception as exc:
+                logger.error(f"Failed to override preview from database: {exc}")
+                
+            return run_dict
 
     def record(self, record: RunRecord | Mapping[str, Any]) -> Dict[str, Any]:
-        payload = self._load()
-        runs = list(payload.get("runs", []))
-
         if isinstance(record, RunRecord):
             record_dict = record.to_dict()
         else:
             record_dict = dict(record)
 
         run_id = str(record_dict.get("run_id", ""))
-        runs = [item for item in runs if str(item.get("run_id")) != run_id]
-        runs.append(record_dict)
-        runs.sort(key=lambda item: str(item.get("created_at", "")), reverse=True)
+        source_file = record_dict.get("source_file", "")
+        created_at = record_dict.get("created_at") or datetime.now().isoformat()
+        status = record_dict.get("status", "unknown")
+        user_message = record_dict.get("user_message", "")
+        failure_category = record_dict.get("failure_category")
+        failure_message = record_dict.get("failure_message")
+        insight_status = record_dict.get("insight_status", "not_generated")
+        insight_updated_at = record_dict.get("insight_updated_at", "")
+        advice_markdown = record_dict.get("advice_markdown", "")
 
-        payload["runs"] = runs
-        self._save(payload)
+        summary_str = json.dumps(record_dict.get("summary", {}), ensure_ascii=False)
+        derived_tables_str = json.dumps(record_dict.get("derived_tables", []), ensure_ascii=False)
+        logs_str = json.dumps(record_dict.get("logs", []), ensure_ascii=False)
+        charts_str = json.dumps(record_dict.get("charts", []), ensure_ascii=False)
+        insights_str = json.dumps(record_dict.get("insights", []), ensure_ascii=False)
+        chart_failures_str = json.dumps(record_dict.get("chart_failures", []), ensure_ascii=False)
+
+        with sqlite3.connect(str(self.db_path)) as conn:
+            conn.execute(
+                """
+                INSERT OR REPLACE INTO runs (
+                    run_id, source_file, created_at, status, user_message, 
+                    failure_category, failure_message, insight_status, 
+                    insight_updated_at, summary, derived_tables, logs, 
+                    charts, insights, advice_markdown, chart_failures
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    run_id, source_file, created_at, status, user_message,
+                    failure_category, failure_message, insight_status,
+                    insight_updated_at, summary_str, derived_tables_str, logs_str,
+                    charts_str, insights_str, advice_markdown, chart_failures_str
+                )
+            )
         return record_dict
 
     def group_by_source(self) -> Dict[str, List[Dict[str, Any]]]:
         grouped: Dict[str, List[Dict[str, Any]]] = {}
-        for record in self._load().get("runs", []):
+        for record in self.list_runs():
             source = str(record.get("source_file", "unknown"))
             grouped.setdefault(source, []).append(record)
-        for records in grouped.values():
-            records.sort(key=lambda item: str(item.get("created_at", "")), reverse=True)
         return grouped
 
     def latest(self) -> Optional[Dict[str, Any]]:
-        runs = self._load().get("runs", [])
-        return runs[0] if runs else None
+        with sqlite3.connect(str(self.db_path)) as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                """
+                SELECT run_id, source_file, created_at, status, user_message, 
+                       failure_category, failure_message, insight_status, 
+                       insight_updated_at, summary, derived_tables, logs, 
+                       charts, insights, advice_markdown, chart_failures 
+                FROM runs ORDER BY created_at DESC LIMIT 1
+                """
+            )
+            row = cursor.fetchone()
+            if row:
+                return self._row_to_dict(row)
+        return None
+
+    def save_comments(self, run_id: str, df: pd.DataFrame, text_column: str) -> None:
+        """Save dataframe comments to SQLite database."""
+        if df is None or not hasattr(df, "iterrows"):
+            return
+        with sqlite3.connect(str(self.db_path)) as conn:
+            cursor = conn.cursor()
+            for _, row in df.iterrows():
+                raw_content = str(row.get(text_column) or "")
+                cleaned_text = str(row.get("cleaned_text") or "")
+                
+                seg = row.get("segmented_text")
+                if isinstance(seg, str):
+                    try:
+                        seg = json.loads(seg)
+                    except Exception:
+                        seg = [s.strip() for s in seg.split(",") if s.strip()]
+                segmented_text = json.dumps(list(seg or []))
+                
+                fil = row.get("filtered_text")
+                if isinstance(fil, str):
+                    try:
+                        fil = json.loads(fil)
+                    except Exception:
+                        fil = [s.strip() for s in fil.split(",") if s.strip()]
+                filtered_text = json.dumps(list(fil or []))
+                
+                processed_text = str(row.get("processed_text") or "")
+                sentiment = str(row.get("sentiment") or "neutral")
+                
+                sentiment_score = row.get("sentiment_score")
+                if sentiment_score is None:
+                    from comment_analyzer.sentiment.labeler import SentimentLabeler
+                    labeler = SentimentLabeler()
+                    sentiment_score = labeler.get_score(cleaned_text)
+                sentiment_score = float(sentiment_score)
+
+                cursor.execute(
+                    """
+                    INSERT INTO comments (
+                        run_id, raw_content, cleaned_text, segmented_text, 
+                        filtered_text, processed_text, sentiment, sentiment_score
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                    """,
+                    (
+                        run_id, raw_content, cleaned_text, segmented_text,
+                        filtered_text, processed_text, sentiment, sentiment_score
+                    )
+                )
+            conn.commit()
+
+    def get_comments(self, run_id: str) -> List[Dict[str, Any]]:
+        """Retrieve all comments associated with a run."""
+        with sqlite3.connect(str(self.db_path)) as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                """
+                SELECT comment_id, run_id, raw_content, cleaned_text, segmented_text, 
+                       filtered_text, processed_text, sentiment, sentiment_score 
+                FROM comments WHERE run_id = ? ORDER BY comment_id ASC
+                """,
+                (run_id,)
+            )
+            rows = cursor.fetchall()
+            comments = []
+            for r in rows:
+                def _safe_json_loads(val: str, default: Any) -> Any:
+                    if not val:
+                        return default
+                    try:
+                        return json.loads(val)
+                    except Exception:
+                        return default
+
+                comments.append({
+                    "comment_id": r[0],
+                    "run_id": r[1],
+                    "raw_content": r[2],
+                    "cleaned_text": r[3],
+                    "segmented_text": _safe_json_loads(r[4], []),
+                    "filtered_text": _safe_json_loads(r[5], []),
+                    "processed_text": r[6],
+                    "sentiment": r[7],
+                    "sentiment_score": r[8]
+                })
+            return comments
+
+    def update_comment(self, comment_id: int, updates: Dict[str, Any]) -> None:
+        """Update comment content or sentiment properties in database."""
+        allowed_keys = {"raw_content", "cleaned_text", "sentiment", "sentiment_score"}
+        filtered_updates = {k: v for k, v in updates.items() if k in allowed_keys}
+        if not filtered_updates:
+            return
+
+        set_clause = ", ".join(f"{k} = ?" for k in filtered_updates.keys())
+        params = list(filtered_updates.values())
+        params.append(comment_id)
+
+        with sqlite3.connect(str(self.db_path)) as conn:
+            conn.execute(
+                f"UPDATE comments SET {set_clause} WHERE comment_id = ?",
+                params
+            )
 
 
 def build_run_record(
