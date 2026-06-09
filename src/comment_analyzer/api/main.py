@@ -13,7 +13,7 @@ import zipfile
 from pathlib import Path
 from typing import Any, Dict, Mapping, Optional
 
-from fastapi import BackgroundTasks, Body, FastAPI, File, HTTPException, UploadFile
+from fastapi import BackgroundTasks, Body, FastAPI, File, HTTPException, Query, UploadFile
 from fastapi.responses import FileResponse, JSONResponse
 
 from comment_analyzer.api.schemas import (
@@ -1038,7 +1038,7 @@ def create_app(settings: Optional[Settings] = None) -> FastAPI:
         )
 
     @app.get("/api/v1/runs/{run_id}/artifacts/{artifact_type}/{artifact_index}")
-    def get_artifact_file(run_id: str, artifact_type: str, artifact_index: int) -> Any:
+    def get_artifact_file(run_id: str, artifact_type: str, artifact_index: int, download: bool = Query(False)) -> Any:
         mapping = {"tables": "derived_tables", "logs": "logs", "charts": "charts", "insights": "insights"}
         key = mapping.get(artifact_type, artifact_type)
         record = _record_or_404(_registry(app_settings), run_id)
@@ -1048,12 +1048,14 @@ def create_app(settings: Optional[Settings] = None) -> FastAPI:
         path = Path(str(items[artifact_index].get("path") or ""))
         if not path.exists() or not path.is_file():
             raise HTTPException(status_code=404, detail="Artifact file not found")
-        return JSONResponse(
-            {
-                "path": str(path),
-                "media_type": mimetypes.guess_type(path.name)[0] or "application/octet-stream",
-            }
-        )
+            
+        if download:
+            return FileResponse(path, media_type="application/octet-stream", filename=path.name)
+            
+        mime = mimetypes.guess_type(path.name)[0] or "application/octet-stream"
+        if path.suffix in {".html", ".htm"}:
+            mime = "text/html; charset=utf-8"
+        return FileResponse(path, media_type=mime)
 
     @app.get("/api/v1/runs/{run_id}/comments")
     def get_run_comments(run_id: str) -> Any:
