@@ -364,6 +364,7 @@ function WorkspacePage() {
 
 function DashboardPage() {
   const { runId } = useParams();
+  const runs = useRuns();
   const charts = useRunCharts(runId);
   const structuredCharts = useStructuredRunCharts(runId);
   const hasStructuredCharts = Boolean(structuredCharts.data?.length);
@@ -376,40 +377,48 @@ function DashboardPage() {
       subtitle="Structured charts are used when the API provides them."
       actions={<ExportRunAction runId={runId} />}
     >
-      {isLoading ? (
-        <LoadingState />
-      ) : charts.isError ? (
-        <ErrorState error={charts.error} />
-      ) : hasStructuredCharts ? (
-        <>
-          <div className="chart-grid">
-            {structuredCharts.data?.map((chart, index) => (
-              <StructuredChartCard key={chart.id || chart.chart_id || chart.name || index} chart={chart} />
-            ))}
-          </div>
-          {charts.data.length ? (
-            <section className="artifact-section">
-              <div className="panel-head">
-                <h2>Chart files</h2>
-                <span className="muted">Legacy artifacts remain available.</span>
-              </div>
-              <div className="chart-grid compact-chart-grid">
-                {charts.data.map((chart) => (
-                  <ChartCard key={`${chart.name}-${chart.open_url || chart.reason}`} chart={chart} />
+      <section className="split-layout">
+        <aside className="side-panel">
+          <h2>Runs</h2>
+          {runs.data?.length ? <RunList runs={runs.data} compact /> : <EmptyState title="No runs" />}
+        </aside>
+        <div className="content-grid">
+          {isLoading ? (
+            <LoadingState />
+          ) : charts.isError ? (
+            <ErrorState error={charts.error} />
+          ) : hasStructuredCharts ? (
+            <>
+              <div className="chart-grid">
+                {structuredCharts.data?.map((chart, index) => (
+                  <StructuredChartCard key={chart.id || chart.chart_id || chart.name || index} chart={chart} />
                 ))}
               </div>
-            </section>
-          ) : null}
-        </>
-      ) : charts.data.length ? (
-        <div className="chart-grid">
-          {charts.data.map((chart) => (
-            <ChartCard key={`${chart.name}-${chart.open_url || chart.reason}`} chart={chart} />
-          ))}
+              {charts.data.length ? (
+                <section className="artifact-section">
+                  <div className="panel-head">
+                    <h2>Chart files</h2>
+                    <span className="muted">Legacy artifacts remain available.</span>
+                  </div>
+                  <div className="chart-grid compact-chart-grid">
+                    {charts.data.map((chart) => (
+                      <ChartCard key={`${chart.name}-${chart.open_url || chart.reason}`} chart={chart} />
+                    ))}
+                  </div>
+                </section>
+              ) : null}
+            </>
+          ) : charts.data.length ? (
+            <div className="chart-grid">
+              {charts.data.map((chart) => (
+                <ChartCard key={`${chart.name}-${chart.open_url || chart.reason}`} chart={chart} />
+              ))}
+            </div>
+          ) : (
+            <EmptyState title="No charts" description="No structured chart data or chart artifacts were found for this run." />
+          )}
         </div>
-      ) : (
-        <EmptyState title="No charts" description="No structured chart data or chart artifacts were found for this run." />
-      )}
+      </section>
     </Layout>
   );
 }
@@ -465,6 +474,7 @@ function AdviceBlocks({ markdown, structuredAdvice }: { markdown?: string; struc
 
 function InsightsPage() {
   const { runId } = useParams();
+  const runs = useRuns();
   const run = useRun(runId);
   const saveKey = useDeepSeekSession();
   const generate = useGenerateInsight(runId);
@@ -474,15 +484,23 @@ function InsightsPage() {
 
   return (
     <Layout eyebrow="Advice" title={getRunTitle(run.data)} subtitle="DeepSeek generated decision notes.">
-      <section className="insight-controls">
-        <input value={apiKey} onChange={(event) => setApiKey(event.target.value)} type="password" placeholder="sk-..." aria-label="DeepSeek API Key" />
-        <button onClick={() => saveKey.mutate(apiKey)} disabled={!apiKey || saveKey.isPending}>Save</button>
-        <button className="primary-button" onClick={() => generate.mutate()} disabled={!runId || generate.isPending}>Generate</button>
-        <StatusBadge label={generate.data?.insight_status || run.data?.insight_status || "not_generated"} tone={generate.data?.insight_status === "generated" || run.data?.insight_status === "generated" ? "success" : "neutral"} />
+      <section className="split-layout">
+        <aside className="side-panel">
+          <h2>Runs</h2>
+          {runs.data?.length ? <RunList runs={runs.data} compact /> : <EmptyState title="No runs" />}
+        </aside>
+        <div className="content-grid">
+          <section className="insight-controls">
+            <input value={apiKey} onChange={(event) => setApiKey(event.target.value)} type="password" placeholder="sk-..." aria-label="DeepSeek API Key" />
+            <button onClick={() => saveKey.mutate(apiKey)} disabled={!apiKey || saveKey.isPending}>Save</button>
+            <button className="primary-button" onClick={() => generate.mutate()} disabled={!runId || generate.isPending}>Generate</button>
+            <StatusBadge label={generate.data?.insight_status || run.data?.insight_status || "not_generated"} tone={generate.data?.insight_status === "generated" || run.data?.insight_status === "generated" ? "success" : "neutral"} />
+          </section>
+          {saveKey.isError ? <ErrorState title="Key failed" error={saveKey.error} /> : null}
+          {generate.isError ? <ErrorState title="Advice failed" error={generate.error} /> : null}
+          <AdviceBlocks markdown={markdown} structuredAdvice={structuredAdvice} />
+        </div>
       </section>
-      {saveKey.isError ? <ErrorState title="Key failed" error={saveKey.error} /> : null}
-      {generate.isError ? <ErrorState title="Advice failed" error={generate.error} /> : null}
-      <AdviceBlocks markdown={markdown} structuredAdvice={structuredAdvice} />
     </Layout>
   );
 }
