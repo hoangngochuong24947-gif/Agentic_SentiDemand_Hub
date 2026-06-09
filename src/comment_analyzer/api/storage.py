@@ -29,6 +29,9 @@ class RunStorage(Protocol):
     def update_comment(self, comment_id: int, updates: Dict[str, Any]) -> None:
         ...
 
+    def save_comments(self, run_id: str, df: Any, text_column: str) -> None:
+        ...
+
 
 class JsonRunStorage:
     """JSON-backed run storage that preserves the existing RunRegistry behavior."""
@@ -53,3 +56,6 @@ class JsonRunStorage:
 
     def update_comment(self, comment_id: int, updates: Dict[str, Any]) -> None:
         self.registry.update_comment(comment_id, updates)
+
+    def save_comments(self, run_id: str, df: Any, text_column: str) -> None:
+        self.registry.save_comments(run_id, df, text_column)

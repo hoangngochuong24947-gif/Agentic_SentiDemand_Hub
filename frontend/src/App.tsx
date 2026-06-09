@@ -342,7 +342,7 @@ function WorkspacePage() {
           <h2>Runs</h2>
           {runs.data?.length ? <RunList runs={runs.data} compact /> : <EmptyState title="No runs" />}
         </aside>
-        <div className="content-grid">
+        <div className="artifact-section" style={{ gap: "24px" }}>
           {tables.isLoading ? (
             <LoadingState />
           ) : tables.isError ? (
@@ -382,7 +382,7 @@ function DashboardPage() {
           <h2>Runs</h2>
           {runs.data?.length ? <RunList runs={runs.data} compact /> : <EmptyState title="No runs" />}
         </aside>
-        <div className="content-grid">
+        <div className="artifact-section" style={{ gap: "24px" }}>
           {isLoading ? (
             <LoadingState />
           ) : charts.isError ? (
@@ -489,7 +489,7 @@ function InsightsPage() {
           <h2>Runs</h2>
           {runs.data?.length ? <RunList runs={runs.data} compact /> : <EmptyState title="No runs" />}
         </aside>
-        <div className="content-grid">
+        <div className="artifact-section" style={{ gap: "24px" }}>
           <section className="insight-controls">
             <input value={apiKey} onChange={(event) => setApiKey(event.target.value)} type="password" placeholder="sk-..." aria-label="DeepSeek API Key" />
             <button onClick={() => saveKey.mutate(apiKey)} disabled={!apiKey || saveKey.isPending}>Save</button>
