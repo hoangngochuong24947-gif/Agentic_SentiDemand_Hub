@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, Navigate, Route, Routes, useNavigate, useParams } from "react-router-dom";
 import { BarChart3, Brain, Download, FileText, ListChecks, Upload, XCircle } from "lucide-react";
+import ReactMarkdown from "react-markdown";
 import { getRunTitle } from "./api";
 import {
   ArtifactCard,
@@ -462,7 +463,9 @@ function AdviceBlocks({ markdown, structuredAdvice }: { markdown?: string; struc
               ))}
             </ul>
           ) : markdown ? (
-            <pre>{markdown}</pre>
+            <div className="markdown-body">
+              <ReactMarkdown>{markdown}</ReactMarkdown>
+            </div>
           ) : (
             <p>No {title.toLowerCase()} supplied.</p>
           )}
