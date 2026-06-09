@@ -85,9 +85,9 @@ def _run_detail(record: Mapping[str, Any], settings: Settings) -> RunDetailRespo
         source_file=str(record.get("source_file") or ""),
         created_at=str(record.get("created_at") or ""),
         status=str(record.get("status") or "unknown"),
-        derived_tables=list(record.get("derived_tables") or []),
-        charts=list(record.get("charts") or []),
-        logs=list(record.get("logs") or []),
+        derived_tables=_artifact_items(record, "derived_tables"),
+        charts=_artifact_items(record, "charts"),
+        logs=_artifact_items(record, "logs"),
         insights=list(stored_insights or insight.get("artifacts") or []),
         summary=dict(record.get("summary") or {}),
         user_message=str(record.get("user_message") or ""),
@@ -104,7 +104,24 @@ def _artifact_items(record: Mapping[str, Any], key: str) -> list[Dict[str, Any]]
     items = record.get(key, [])
     if not isinstance(items, list):
         return []
-    return [dict(item) for item in items if isinstance(item, Mapping)]
+        
+    result = []
+    run_id = str(record.get("run_id") or "")
+    for index, item in enumerate(items):
+        if not isinstance(item, Mapping):
+            continue
+        d = dict(item)
+        if run_id:
+            short_type = key
+            if key == "derived_tables":
+                short_type = "tables"
+            file_index = d.get("file_index", index)
+            if d.get("status") == "ready" and not d.get("open_url"):
+                d["open_url"] = f"/api/v1/runs/{run_id}/artifacts/{short_type}/{file_index}"
+            if d.get("downloadable") and not d.get("download_url"):
+                d["download_url"] = f"/api/v1/runs/{run_id}/artifacts/{short_type}/{file_index}?download=true"
+        result.append(d)
+    return result
 
 
 def _name_matches(item: Mapping[str, Any], *needles: str) -> bool:
