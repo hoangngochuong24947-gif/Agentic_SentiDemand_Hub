@@ -50,6 +50,7 @@ dev = [
     "flake8>=5.0.0",
     "mypy>=1.0.0",
     "sphinx>=5.0.0",
+    "httpx>=0.24.0",
 ]
 viz = [
     "fastapi>=0.110.0",

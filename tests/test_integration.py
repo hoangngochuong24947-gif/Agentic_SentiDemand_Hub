@@ -219,7 +219,9 @@ class TestConfigurationIntegration:
 
         # Should be able to access nested values
         assert config.data.platform == "generic"
-        assert config.sentiment.labeling_method == "snownlp"
+        # The shipped config/default.yaml (and the new Settings default) use
+        # "auto", which resolves to snownlp for Chinese in the labeler.
+        assert config.sentiment.labeling_method == "auto"
 
         # Should be able to use with pipeline
         from comment_analyzer import CommentPipeline
