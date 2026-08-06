@@ -15,6 +15,9 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Union
 
+# Cap numeric library thread pools before pandas/numpy/sklearn/gensim load.
+from comment_analyzer._limits import apply_runtime_limits  # noqa: F401
+
 import pandas as pd
 from loguru import logger
 from tqdm import tqdm

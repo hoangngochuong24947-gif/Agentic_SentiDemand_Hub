@@ -10,14 +10,18 @@ import shutil
 import urllib.error
 import urllib.request
 import uuid
+from collections import OrderedDict
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple
 
 from loguru import logger
 
+# Apply conservative CPU/memory limits before any heavy numeric library could
+# be imported at request time (the pipeline is imported lazily in _pipeline_class).
+from comment_analyzer._limits import apply_runtime_limits  # noqa: F401
+
 from comment_analyzer.core.log_manager import get_log_manager
-from comment_analyzer.core.pipeline import CommentPipeline
 from comment_analyzer.core.settings import Settings, get_settings
 from comment_analyzer.visualization.generator import VisualizationGenerator
 from comment_analyzer.visualization.pages import (
@@ -38,7 +42,10 @@ from comment_analyzer.visualization.run_registry import (
 _ALLOWED_UPLOAD_SUFFIXES = {".csv", ".xlsx", ".xls", ".json"}
 _RUNS_VERSION = "3.0"
 _DEEPSEEK_ENDPOINT = "https://api.deepseek.com/chat/completions"
-_SESSION_KEYS: Dict[str, Dict[str, str]] = {}
+# Bound the in-memory DeepSeek session-key cache so long-lived servers don't
+# accumulate entries without limit.
+_SESSION_KEYS: "OrderedDict[str, Dict[str, str]]" = OrderedDict()
+_SESSION_KEY_LIMIT = 200
 
 _UPLOAD_HELP_LINES = (
     "支持 CSV / XLSX / XLS / JSON 四种格式。",
@@ -77,6 +84,32 @@ def _import_fastapi() -> Tuple[Any, Any, Any, Any, Any, Any, Any, Any, Any, Any]
     return Body, FastAPI, File, HTTPException, Query, UploadFile, FileResponse, HTMLResponse, JSONResponse, uvicorn
 
 
+def _pipeline_class() -> Any:
+    """Return the CommentPipeline class, importing it lazily on first use.
+
+    Importing ``comment_analyzer.core.pipeline`` pulls in pandas, scikit-learn,
+    gensim, jieba and snownlp (~500 MB RSS). The gallery server only needs it
+    while handling an upload, so the import is deferred until then to keep the
+    idle server memory footprint small.
+    """
+    from comment_analyzer.visualization import gallery as _gallery
+
+    # Prefer a monkeypatched attribute (used by tests) over the lazy import.
+    return getattr(_gallery, "CommentPipeline")
+
+
+def __getattr__(name: str):
+    if name == "CommentPipeline":
+        from comment_analyzer.core.pipeline import CommentPipeline
+
+        return CommentPipeline
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
+
+def __dir__():
+    return sorted(set(globals()) | {"CommentPipeline"})
+
+
 def _safe_filename(filename: str) -> str:
     cleaned = re.sub(r"[^A-Za-z0-9._-]+", "_", filename).strip("_")
     return cleaned or "upload.csv"
@@ -84,6 +117,11 @@ def _safe_filename(filename: str) -> str:
 
 def _chart_manifest_path(settings: Settings) -> Path:
     return settings.paths.get_visualization_path() / "manifest.json"
+
+
+# In-process cache of (manifest_file_mtime, payload) so page views don't
+# re-parse a growing manifest.json on every request.
+_manifest_cache: Dict[str, Tuple[Optional[float], Dict[str, Any]]] = {}
 
 
 def _run_registry_path(settings: Settings) -> Path:
@@ -108,16 +146,29 @@ def _registry(settings: Settings) -> RunRegistry:
 
 def _load_chart_manifest(settings: Settings) -> Dict[str, Any]:
     path = _chart_manifest_path(settings)
+    try:
+        mtime = path.stat().st_mtime
+    except OSError:
+        mtime = None
+
+    cached = _manifest_cache.get(str(path))
+    if cached is not None and cached[0] == mtime:
+        return cached[1]
+
     if not path.exists():
-        return {"version": "1.0", "entries": []}
+        payload: Dict[str, Any] = {"version": "1.0", "entries": []}
+        _manifest_cache[str(path)] = (mtime, payload)
+        return payload
+
     try:
         payload = json.loads(path.read_text(encoding="utf-8"))
     except Exception:
-        return {"version": "1.0", "entries": []}
+        payload = {"version": "1.0", "entries": []}
     entries = payload.get("entries", [])
     if not isinstance(entries, list):
         entries = []
     payload["entries"] = [entry for entry in entries if isinstance(entry, Mapping)]
+    _manifest_cache[str(path)] = (mtime, payload)
     return payload
 
 
@@ -714,6 +765,8 @@ def create_app(settings: Optional[Settings] = None) -> Any:
             "api_key": api_key,
             "updated_at": datetime.now().isoformat(),
         }
+        while len(_SESSION_KEYS) > _SESSION_KEY_LIMIT:
+            _SESSION_KEYS.popitem(last=False)
         return JSONResponse(
             {
                 "session_id": session_id,
@@ -857,7 +910,7 @@ def create_app(settings: Optional[Settings] = None) -> Any:
         run_id = uuid.uuid4().hex[:12]
         get_log_manager().clear_entries()
         try:
-            pipeline = CommentPipeline(settings=app_settings)
+            pipeline = _pipeline_class()(settings=app_settings)
             dataframe = pipeline.load_data(target)
             results = pipeline.run(dataframe, verbose=False)
             results.run_id = results.run_id or run_id

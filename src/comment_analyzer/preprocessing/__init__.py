@@ -4,8 +4,24 @@ This package provides text preprocessing capabilities including cleaning,
 segmentation, and stopword filtering for Chinese text.
 """
 
-from comment_analyzer.preprocessing.cleaner import TextCleaner
-from comment_analyzer.preprocessing.segmenter import JiebaSegmenter
-from comment_analyzer.preprocessing.filter import StopwordFilter
-
 __all__ = ["TextCleaner", "JiebaSegmenter", "StopwordFilter"]
+
+_LAZY_IMPORTS = {
+    "TextCleaner": ("comment_analyzer.preprocessing.cleaner", "TextCleaner"),
+    "JiebaSegmenter": ("comment_analyzer.preprocessing.segmenter", "JiebaSegmenter"),
+    "StopwordFilter": ("comment_analyzer.preprocessing.filter", "StopwordFilter"),
+}
+
+
+def __getattr__(name: str):
+    if name in _LAZY_IMPORTS:
+        import importlib
+
+        module_name, attr = _LAZY_IMPORTS[name]
+        module = importlib.import_module(module_name)
+        return getattr(module, attr)
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
+
+def __dir__():
+    return sorted(set(globals()) | set(__all__))

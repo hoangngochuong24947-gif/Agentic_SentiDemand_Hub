@@ -126,12 +126,19 @@ class Classifier:
                 random_state=self.model_params.get('random_state', 42),
             )
         elif self.model_type == 'logistic_regression':
-            return LogisticRegression(
-                C=self.model_params.get('C', 1.0),
-                max_iter=self.model_params.get('max_iter', 1000),
-                random_state=self.model_params.get('random_state', 42),
-                n_jobs=-1,
-            )
+            # NOTE: do not pass n_jobs=-1 here. It spawns one worker per class
+            # on the host's full CPU set, spiking memory on small shared
+            # servers. Leaving it unset uses the single-job default; thread
+            # caps are also applied globally via comment_analyzer._limits.
+            n_jobs = self.model_params.get('n_jobs', None)
+            kwargs: Dict[str, Any] = {
+                'C': self.model_params.get('C', 1.0),
+                'max_iter': self.model_params.get('max_iter', 1000),
+                'random_state': self.model_params.get('random_state', 42),
+            }
+            if n_jobs is not None:
+                kwargs['n_jobs'] = n_jobs
+            return LogisticRegression(**kwargs)
 
     def train(
         self,

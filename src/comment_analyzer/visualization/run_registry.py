@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
+import threading
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Mapping, MutableMapping, Optional, Sequence
+from typing import Any, Dict, Iterable, List, Mapping, MutableMapping, Optional, Sequence, Tuple
 
 from loguru import logger
 
@@ -211,8 +212,27 @@ class RunRegistry:
     def __init__(self, registry_path: Path):
         self.registry_path = Path(registry_path)
         self.registry_path.parent.mkdir(parents=True, exist_ok=True)
+        # In-process cache of (registry_file_mtime, payload). Re-parsing a large
+        # run_registry.json on every page view spiked memory and CPU; the cache
+        # is invalidated whenever the file's mtime changes (e.g. after record()).
+        self._cache: Optional[Tuple[Optional[float], Dict[str, Any]]] = None
+        self._lock = threading.Lock()
 
     def _load(self) -> Dict[str, Any]:
+        try:
+            mtime = self.registry_path.stat().st_mtime
+        except OSError:
+            mtime = None
+
+        cached = self._cache
+        if cached is not None and cached[0] == mtime:
+            return cached[1]
+
+        payload = self._read_from_disk()
+        self._cache = (mtime, payload)
+        return payload
+
+    def _read_from_disk(self) -> Dict[str, Any]:
         if not self.registry_path.exists():
             return {"version": "1.0", "runs": []}
 
@@ -239,7 +259,13 @@ class RunRegistry:
         )
 
     def to_dict(self) -> Dict[str, Any]:
-        return self._load()
+        # Return a shallow copy: callers (e.g. the /api/manifest endpoint) may
+        # mutate the top-level payload, and the cached dict must stay pristine.
+        payload = self._load()
+        return {
+            "version": payload.get("version", "1.0"),
+            "runs": list(payload.get("runs", [])),
+        }
 
     def list_runs(self) -> List[Dict[str, Any]]:
         """Return all recorded runs in stored order."""
@@ -255,22 +281,29 @@ class RunRegistry:
         return None
 
     def record(self, record: RunRecord | Mapping[str, Any]) -> Dict[str, Any]:
-        payload = self._load()
-        runs = list(payload.get("runs", []))
+        with self._lock:
+            payload = self._load()
+            runs = list(payload.get("runs", []))
 
-        if isinstance(record, RunRecord):
-            record_dict = record.to_dict()
-        else:
-            record_dict = dict(record)
+            if isinstance(record, RunRecord):
+                record_dict = record.to_dict()
+            else:
+                record_dict = dict(record)
 
-        run_id = str(record_dict.get("run_id", ""))
-        runs = [item for item in runs if str(item.get("run_id")) != run_id]
-        runs.append(record_dict)
-        runs.sort(key=lambda item: str(item.get("created_at", "")), reverse=True)
+            run_id = str(record_dict.get("run_id", ""))
+            runs = [item for item in runs if str(item.get("run_id")) != run_id]
+            runs.append(record_dict)
+            runs.sort(key=lambda item: str(item.get("created_at", "")), reverse=True)
 
-        payload["runs"] = runs
-        self._save(payload)
-        return record_dict
+            payload["runs"] = runs
+            self._save(payload)
+            # Refresh the in-process cache so the next read doesn't re-parse the
+            # file we just wrote.
+            try:
+                self._cache = (self.registry_path.stat().st_mtime, payload)
+            except OSError:
+                self._cache = None
+            return record_dict
 
     def group_by_source(self) -> Dict[str, List[Dict[str, Any]]]:
         grouped: Dict[str, List[Dict[str, Any]]] = {}
